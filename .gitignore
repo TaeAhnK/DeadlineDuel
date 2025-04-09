@@ -76,3 +76,6 @@ crashlytics-build.properties
 testClient/
 Assets/12.OuterPackage/
 
+
+/.idea
+/Assets/Downloads
