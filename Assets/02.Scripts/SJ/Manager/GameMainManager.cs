@@ -98,7 +98,13 @@ public class GameMainManager : MonoBehaviour
         // UI 초기 설정
         _mainMenuPanel.SetActive(true);
         _characterSelectPanel.SetActive(false);
-        _matchingStatusText.gameObject.SetActive(false);
+        
+        // 매칭 상태 텍스트 초기화 - 수정된 부분
+        if (_matchingStatusText != null)
+        {
+            _matchingStatusText.text = "매칭을 시작하려면 캐릭터를 선택하세요";
+            _matchingStatusText.gameObject.SetActive(false);
+        }
 
         // 캐릭터 버튼 기본 색상 저장
         if (_characterButtons.Length > 0)
@@ -376,6 +382,7 @@ public class GameMainManager : MonoBehaviour
         _matchFound = false;
         _hasError = false;
         _errorMessage = "";
+        _matchmakingStartTime = Time.time; // 매칭 시작 시간 저장
         
         // UI 업데이트
         _matchingStatusText.gameObject.SetActive(true);
@@ -395,12 +402,18 @@ public class GameMainManager : MonoBehaviour
     {
         Debug.Log("매치메이킹 시작");
         
+        // 매칭 시작 시간 설정 - UI에 이미 표시했으므로 여기서도 초기화
+        _matchmakingStartTime = Time.time;
+        
         // 로비 검색 또는 생성
         _lobbyId = null;
         _currentLobby = null;
         
         // 로비 검색/생성 실행 (작업 완료 대기)
         StartCoroutine(FindOrCreateLobbyCoroutine());
+        
+        // 별도의 타이머 코루틴 시작 - 추가된 부분
+        StartCoroutine(UpdateMatchingTimer());
         
         // 로비 작업 완료 대기
         while (_lobbyId == null && !_hasError && _isMatchmaking)
@@ -440,16 +453,6 @@ public class GameMainManager : MonoBehaviour
         // 매칭이 성사될 때까지 대기 (로비 업데이트 코루틴에서 상태 체크)
         while (_isMatchmaking && !_matchFound && !_hasError)
         {
-            // 매칭 시간 업데이트
-            float elapsedTime = Time.time - _matchmakingStartTime;
-            int minutes = Mathf.FloorToInt(elapsedTime / 60f);
-            int seconds = Mathf.FloorToInt(elapsedTime % 60f);
-            
-            // 초가 10초 미만일 때 앞에 0 추가
-            string secondsStr = seconds < 10 ? $"0{seconds}" : seconds.ToString();
-            
-            _matchingStatusText.text = $"매칭 중... {minutes}:{secondsStr}";
-            
             yield return null;
         }
         
@@ -519,6 +522,25 @@ public class GameMainManager : MonoBehaviour
             
             // 다음 씬으로 이동
             SceneManager.LoadScene(_lobbySceneName);
+        }
+    }
+    
+    private IEnumerator UpdateMatchingTimer()
+    {
+        while (_isMatchmaking && !_matchFound && !_hasError)
+        {
+            // 매칭 시간 업데이트
+            float elapsedTime = Time.time - _matchmakingStartTime;
+            int minutes = Mathf.FloorToInt(elapsedTime / 60f);
+            int seconds = Mathf.FloorToInt(elapsedTime % 60f);
+        
+            // 초가 10초 미만일 때 앞에 0 추가
+            string secondsStr = seconds < 10 ? $"0{seconds}" : seconds.ToString();
+        
+            _matchingStatusText.text = $"매칭 중... {minutes}:{secondsStr}";
+        
+            // 0.5초마다 업데이트
+            yield return new WaitForSeconds(0.5f);
         }
     }
     
@@ -1307,5 +1329,22 @@ public class GameMainManager : MonoBehaviour
             string currentState = updatedLobby.Data.TryGetValue("S1", out var stateData) ? stateData.Value : "Unknown";
             Debug.Log($"현재 로비 상태: {currentState}, 호스트 ID: {updatedLobby.HostId}, 내 ID: {AuthenticationService.Instance.PlayerId}");
         }
+    }
+    
+    public static void ClearPreviousSessionData()
+    {
+        // 정적 변수 초기화
+        RelayJoinCode = null;
+    
+        // PlayerPrefs에서 이전 세션 데이터 삭제
+        PlayerPrefs.DeleteKey("RelayJoinCode");
+        PlayerPrefs.DeleteKey("CurrentLobbyId");
+    
+        // 기타 필요한 키 삭제
+        // PlayerPrefs.DeleteKey("IsHost");
+    
+        PlayerPrefs.Save();
+    
+        Debug.Log("이전 세션 데이터가 초기화되었습니다.");
     }
 }

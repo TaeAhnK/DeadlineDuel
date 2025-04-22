@@ -23,7 +23,6 @@ public class GameLobbyManager : NetworkBehaviour
     [Header("UI 참조")]
     [SerializeField] private TextMeshProUGUI _countdownText;
     [SerializeField] private TextMeshProUGUI _gameInfoText;
-    [SerializeField] private Button _reconnectButton; // 재연결 버튼 추가
     
     [Header("네트워크 설정")]
     [SerializeField] private GameObject _playerPrefab;
@@ -52,17 +51,16 @@ public class GameLobbyManager : NetworkBehaviour
         // 이전 씬에서 정보 가져오기
         LoadGameInfo();
         
+        // 기존 코드와 현재 코드를 출력하여 디버깅
+        string existingCode = GameMainManager.RelayJoinCode;
+        string prefsCode = PlayerPrefs.GetString("RelayJoinCode", "");
+    
+        Debug.Log($"[중요] 세션 시작 - 정적 변수 코드: {existingCode}, PlayerPrefs 코드: {prefsCode}");
+        
         // UI 초기화
         _gameInfoText.text = "게임 준비 중...";
         _remainingTime = _preparationTime;
         UpdateCountdownText();
-        
-        // 재연결 버튼 설정 (있는 경우)
-        if (_reconnectButton != null)
-        {
-            _reconnectButton.onClick.AddListener(RetryConnection);
-            _reconnectButton.gameObject.SetActive(false); // 처음에는 숨김
-        }
         
         // 네트워크 설정
         SetupNetwork();
@@ -167,12 +165,6 @@ public class GameLobbyManager : NetworkBehaviour
         {
             _gameInfoText.text = "서버 연결 실패. 재연결 버튼을 클릭하거나 게임을 다시 시작하세요.";
             Debug.LogError("최대 연결 시도 횟수 초과");
-            
-            // 재연결 버튼 표시
-            if (_reconnectButton != null)
-            {
-                _reconnectButton.gameObject.SetActive(true);
-            }
         }
     }
     
@@ -185,7 +177,7 @@ public class GameLobbyManager : NetworkBehaviour
         if (!string.IsNullOrEmpty(GameMainManager.RelayJoinCode))
         {
             joinCode = GameMainManager.RelayJoinCode;
-            Debug.Log($"GameMainManager에서 조인 코드 찾음: {joinCode}");
+            Debug.Log($"[중요] GameMainManager에서 조인 코드 찾음: {joinCode}");
             return joinCode;
         }
         
@@ -193,11 +185,22 @@ public class GameLobbyManager : NetworkBehaviour
         joinCode = PlayerPrefs.GetString("RelayJoinCode", "");
         if (!string.IsNullOrEmpty(joinCode))
         {
-            Debug.Log($"PlayerPrefs에서 조인 코드 찾음: {joinCode}");
+            Debug.Log($"[중요] PlayerPrefs에서 조인 코드 찾음: {joinCode}");
+        
+            // 정적 변수가 비어있으면 이 값으로 업데이트
+            if (string.IsNullOrEmpty(GameMainManager.RelayJoinCode))
+            {
+                GameMainManager.RelayJoinCode = joinCode;
+            }
+        
             return joinCode;
         }
         
-        // 3. 로비 데이터에서 읽어오는 것은 별도 코루틴에서 수행
+        // 3. 로비에서 직접 가져온 코드가 있으면 모든 위치에 동기화
+        if (string.IsNullOrEmpty(joinCode))
+        {
+            Debug.Log("[중요] 모든 소스에서 조인코드를 찾지 못했습니다.");
+        }
         return null;
     }
     
@@ -280,13 +283,9 @@ public class GameLobbyManager : NetworkBehaviour
         }
     }
     
-    // 연결 재시도 버튼 클릭 처리
+    // 연결 재시도 버튼 클릭 처리 (혹시몰라서 유지)
     private void RetryConnection()
     {
-        if (_reconnectButton != null)
-        {
-            _reconnectButton.gameObject.SetActive(false);
-        }
         
         // 연결 재시도
         StartCoroutine(ClientConnectWithRetry());
@@ -296,6 +295,15 @@ public class GameLobbyManager : NetworkBehaviour
     private IEnumerator SetupRelayServer()
     {
         _gameInfoText.text = "서버 설정 중...";
+        
+        // 이전에 저장된 조인 코드 확인 (재사용 안함, 항상 새로 생성)
+        if (!string.IsNullOrEmpty(GameMainManager.RelayJoinCode) || !string.IsNullOrEmpty(PlayerPrefs.GetString("RelayJoinCode", "")))
+        {
+            Debug.Log("경고: 이전 세션의 조인 코드가 감지되었습니다. 새 코드를 생성합니다.");
+            GameMainManager.RelayJoinCode = null;
+            PlayerPrefs.DeleteKey("RelayJoinCode");
+            PlayerPrefs.Save();
+        }
         
         // Relay 할당 생성
         Task<Allocation> allocationTask = RelayService.Instance.CreateAllocationAsync(8);

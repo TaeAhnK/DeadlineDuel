@@ -69,6 +69,9 @@ public class GameInitManager : MonoBehaviour
             Destroy(gameObject);
             return;
         }
+        
+        // 이전 세션 데이터 정리
+        GameMainManager.ClearPreviousSessionData();
 
         // UI 초기 설정
         _splashScreen.SetActive(true);
