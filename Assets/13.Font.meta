@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<<< HEAD:Assets/13.Font.meta
 guid: 32c2dd47d7808d740a4866b68baabbd2
+========
+guid: aca90e479c8f561489740adc89fb8149
+>>>>>>>> dadc147 (Add Test Server):Assets/KTA/Scripts/Network.meta
 folderAsset: yes
 DefaultImporter:
   externalObjects: {}
