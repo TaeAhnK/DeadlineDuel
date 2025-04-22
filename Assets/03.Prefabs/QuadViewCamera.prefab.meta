@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<<< HEAD:Assets/03.Prefabs/QuadViewCamera.prefab.meta
 guid: a2fffaf425d2c4f46bb343e1dce305d2
+========
+guid: 30fe200f629be6246a254cd97899693a
+>>>>>>>> dadc14748a017c99a14bd692a33983d029922223:Assets/KTA/Prefabs/BossSkill/BossSkill_Slash.prefab.meta
 PrefabImporter:
   externalObjects: {}
   userData: 

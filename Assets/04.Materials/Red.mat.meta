@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<<< HEAD:Assets/04.Materials/Red.mat.meta
 guid: 2e84a55b2aca454489607f79b48e93fc
+========
+guid: 1a1fdf56d2fc6e94c97c29ac9da5195e
+>>>>>>>> dadc14748a017c99a14bd692a33983d029922223:Assets/04.Materials/Sci-Fi ToiletMech/M_SciFi_ToiletMech_Body_Skin 1.mat.meta
 NativeFormatImporter:
   externalObjects: {}
   mainObjectFileID: 2100000

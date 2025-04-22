@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<<< HEAD:Assets/03.Prefabs/Player.prefab.meta
 guid: 808c27993d7cfbd498bc935c237a6e93
+========
+guid: a86e3c97236b7634488cf6885590f88e
+>>>>>>>> dadc14748a017c99a14bd692a33983d029922223:Assets/03.Prefabs/Sci-Fi ToiletMech/Sci-Fi ToiletMech Red.prefab.meta
 PrefabImporter:
   externalObjects: {}
   userData: 
