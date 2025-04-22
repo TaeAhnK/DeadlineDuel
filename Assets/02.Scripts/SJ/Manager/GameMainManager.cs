@@ -9,6 +9,8 @@ using UnityEngine.SceneManagement;
 using Unity.Services.Authentication;
 using Unity.Services.Lobbies;
 using Unity.Services.Lobbies.Models;
+using Unity.Services.Matchmaker.Models;
+using Player = Unity.Services.Lobbies.Models.Player;
 
 /// <summary>
 /// 게임 메인 씬 매니저 - 메인 메뉴, 캐릭터 선택, 매치메이킹 관리
@@ -17,15 +19,19 @@ public class GameMainManager : MonoBehaviour
 {
     private static GameMainManager _instance;
     public static GameMainManager Instance => _instance;
+    
+    // Relay 조인 코드 직접 전달을 위한 정적 변수
+    public static string RelayJoinCode;
+    public static bool IsDebugging = true; // 디버깅 모드 활성화 여부
 
     [Header("씬 설정")]
     [SerializeField] private string _lobbySceneName = "03.GameLobby";
 
-    [Header("UI 패널")]
+    [Header("UI 패널")] // 태우님 UI 가져오면 수정해야할 부분
     [SerializeField] private GameObject _mainMenuPanel;
     [SerializeField] private GameObject _characterSelectPanel;
     
-    [Header("매칭 상태 UI")]
+    [Header("매칭 상태 UI")] //태우님 UI가져오면 수정해야할 부분
     [SerializeField] private TextMeshProUGUI _matchingStatusText;
     [SerializeField] private Button _startMatchmakingButton; // 시작/취소 버튼으로 겸용
     [SerializeField] private TextMeshProUGUI _startMatchmakingButtonText; // 버튼 텍스트 내용
@@ -33,10 +39,17 @@ public class GameMainManager : MonoBehaviour
     [Header("메인 메뉴 UI")]
     [SerializeField] private Button _startGameButton;
     [SerializeField] private Button _settingsButton;
+    [SerializeField] private Button _quitButton;
 
-    [Header("캐릭터 선택 UI")]
+    [Header("캐릭터 선택 UI")] // 태우님 UI가져오면 수정해야할 부분
     [SerializeField] private Button[] _characterButtons; // 캐릭터 선택 버튼 배열
     [SerializeField] private Button _backToMainButton; // 메인으로 돌아가는 버튼 (선택적)
+    [SerializeField] private TextMeshProUGUI _characterNameText; // 캐릭터 이름 텍스트
+    [SerializeField] private TextMeshProUGUI _characterDescriptionText; // 캐릭터 설명 텍스트
+    [SerializeField] private Image _selectedCharacterImage; // 선택된 캐릭터 이미지
+    
+    [Header("캐릭터 데이터")]
+    [SerializeField] private CharacterData[] _characterDataList; // 캐릭터 데이터 배열
     
     // 플레이어 정보
     private string _playerId;
@@ -66,13 +79,15 @@ public class GameMainManager : MonoBehaviour
     [SerializeField] private int _minPlayersToStart = 2; // 게임 시작에 필요한 최소 플레이어 수
     [SerializeField] private int _maxPlayers = 2; // 최대 플레이어 수
     [SerializeField] private int _mmrRange = 200; // 매칭 MMR 범위
-
+    [SerializeField] private float _relayCodeRefreshInterval = 45f; // Relay 코드 갱신 간격 (초)
+    
     private void Awake()
     {
         // 싱글톤 패턴 구현
         if (_instance == null)
         {
             _instance = this;
+            DontDestroyOnLoad(gameObject);
         }
         else
         {
@@ -99,6 +114,45 @@ public class GameMainManager : MonoBehaviour
 
         // UI 이벤트 리스너 등록
         SetupUIListeners();
+        
+        // 캐릭터 데이터 검증
+        ValidateCharacterData();
+    }
+    
+    /// <summary>
+    /// 캐릭터 데이터 검증 및 초기화
+    /// </summary>
+    private void ValidateCharacterData()
+    {
+        if (_characterDataList == null || _characterDataList.Length == 0)
+        {
+            Debug.LogError("캐릭터 데이터가 설정되지 않았습니다!");
+            return;
+        }
+
+        // 캐릭터 버튼 수와 캐릭터 데이터 수 비교
+        if (_characterButtons.Length != _characterDataList.Length)
+        {
+            Debug.LogWarning($"캐릭터 버튼 수({_characterButtons.Length})와 캐릭터 데이터 수({_characterDataList.Length})가 일치하지 않습니다!");
+        }
+
+        // 프리팹 연결 확인
+        for (int i = 0; i < _characterDataList.Length; i++)
+        {
+            if (_characterDataList[i].characterPrefab == null)
+            {
+                Debug.LogError($"캐릭터 {i}의 프리팹이 설정되지 않았습니다!");
+            }
+
+            // 스킬 프리팹 확인
+            for (int j = 0; j < _characterDataList[i].skills.Length; j++)
+            {
+                if (_characterDataList[i].skills[j] != null && _characterDataList[i].skills[j].skillEffectPrefab == null)
+                {
+                    Debug.LogWarning($"캐릭터 {i}의 스킬 {j}에 이펙트 프리팹이 설정되지 않았습니다!");
+                }
+            }
+        }
     }
 
     private void OnDestroy()
@@ -144,25 +198,33 @@ public class GameMainManager : MonoBehaviour
     }
 
     /// <summary>
-    /// UI 이벤트 리스너 설정
+    /// UI 이벤트 리스너 설정 (캐릭터 이미지버튼 기능하는부분)
     /// </summary>
     private void SetupUIListeners()
     {
         // 메인 메뉴 버튼
         _startGameButton.onClick.AddListener(OnStartGameClicked);
         _settingsButton.onClick.AddListener(OnSettingsClicked);
+        _quitButton.onClick.AddListener(OnQuitClicked);
 
         // 캐릭터 선택 버튼
-        for (int i = 0; i < _characterButtons.Length; i++)
+        for (int i = 0; i < _characterButtons.Length && i < _characterDataList.Length; i++)
         {
             int characterIndex = i; // 클로저로 인덱스 캡처
             _characterButtons[i].onClick.AddListener(() => OnCharacterSelected(characterIndex));
+
+            // 캐릭터 아이콘 이미지 설정
+            Image buttonImage = _characterButtons[i].GetComponent<Image>();
+            if (buttonImage != null && _characterDataList[i].portraitImage != null)
+            {
+                buttonImage.sprite = _characterDataList[i].portraitImage;
+            }
         }
 
         // 매칭 시작 및 취소 버튼
         _startMatchmakingButton.onClick.AddListener(OnStartMatchmakingClicked);
 
-        // 뒤로가기 버튼 (선택적)
+        // 뒤로가기 버튼
         if (_backToMainButton != null)
         {
             _backToMainButton.onClick.AddListener(OnBackToMainClicked);
@@ -171,6 +233,7 @@ public class GameMainManager : MonoBehaviour
         //초기상태
         _matchingStatusText.gameObject.SetActive(false);
     }
+
 
     /// <summary>
     /// "Game Start" 버튼 클릭 처리
@@ -193,7 +256,19 @@ public class GameMainManager : MonoBehaviour
     {
         // 설정 UI 표시 로직 구현
         Debug.Log("설정 버튼 클릭");
-        // TODO: 설정 패널 표시
+        // TODO: 설정 패널 표시 (아직 구현 안함)
+    }
+
+    /// <summary>
+    /// "Quit" 버튼 클릭 처리
+    /// </summary>
+    private void OnQuitClicked()
+    {
+        #if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+        #else
+        Application.Quit();
+        #endif
     }
 
     /// <summary>
@@ -211,10 +286,54 @@ public class GameMainManager : MonoBehaviour
         _selectedCharacterIndex = characterIndex;
         _characterButtons[characterIndex].GetComponent<Image>().color = _selectedCharacterButtonColor;
         
+        // 캐릭터 정보 UI 업데이트
+        UpdateCharacterInfoUI(characterIndex);
+        
         // 매칭 시작 버튼 상태 업데이트
         UpdateStartMatchmakingButtonState();
         
         Debug.Log($"캐릭터 {characterIndex} 선택됨");
+    }
+    
+    /// <summary>
+    /// 캐릭터 정보 UI 업데이트 -> 캐릭터의 정보를 가져와서 넣는부분(캐릭터설명 or 특징들)
+    /// </summary>
+    private void UpdateCharacterInfoUI(int characterIndex)
+    {
+        if (characterIndex >= 0 && characterIndex < _characterDataList.Length)
+        {
+            // 캐릭터 이름 설정
+            if (_characterNameText != null)
+            {
+                _characterNameText.text = _characterDataList[characterIndex].name;
+                _characterNameText.color = _characterDataList[characterIndex].themeColor;
+            }
+
+            // 캐릭터 설명 설정 (필요시 추가)
+            if (_characterDescriptionText != null)
+            {
+                _characterDescriptionText.text = "캐릭터 설명이 여기에 들어갑니다...";
+            }
+
+            // 캐릭터 이미지 설정
+            if (_selectedCharacterImage != null && _characterDataList[characterIndex].portraitImage != null)
+            {
+                _selectedCharacterImage.sprite = _characterDataList[characterIndex].portraitImage;
+                _selectedCharacterImage.gameObject.SetActive(true);
+            }
+        }
+        else
+        {
+            // 선택이 없는 경우 정보 초기화
+            if (_characterNameText != null)
+                _characterNameText.text = "캐릭터를 선택하세요";
+            
+            if (_characterDescriptionText != null)
+                _characterDescriptionText.text = "";
+            
+            if (_selectedCharacterImage != null)
+                _selectedCharacterImage.gameObject.SetActive(false);
+        }
     }
 
     /// <summary>
@@ -257,11 +376,9 @@ public class GameMainManager : MonoBehaviour
         _matchFound = false;
         _hasError = false;
         _errorMessage = "";
-        _matchmakingStartTime = Time.time;
         
         // UI 업데이트
         _matchingStatusText.gameObject.SetActive(true);
-        _matchingStatusText.text = "매칭 중...";
         _startMatchmakingButtonText.text = "취소";
         
         //버튼이 계속 클릭 가능하도록 유지
@@ -360,171 +477,320 @@ public class GameMainManager : MonoBehaviour
         {
             _matchingStatusText.text = "매치 찾음! 게임 준비 중...";
             
+            // RelayJoinCode를 여러 곳에서 확인하고 저장하는 로직
+            string relayJoinCode = null;
+        
+            // 1. 로비 데이터에서 확인
+            if (_currentLobby != null && _currentLobby.Data != null && 
+                _currentLobby.Data.TryGetValue("RelayJoinCode", out var relayCodeData))
+            {
+                relayJoinCode = relayCodeData.Value;
+                Debug.Log($"로비에서 Relay 조인 코드 가져옴: {relayJoinCode}");
+            }
+        
+            // 2. 호스트인 경우 PlayerPrefs에서 확인
+            if (string.IsNullOrEmpty(relayJoinCode) && IsLobbyOwner(_currentLobby))
+            {
+                relayJoinCode = PlayerPrefs.GetString("RelayJoinCode", "");
+                Debug.Log($"PlayerPrefs에서 Relay 조인 코드 가져옴: {relayJoinCode}");
+            }
+        
+            // 조인 코드가 있으면 저장
+            if (!string.IsNullOrEmpty(relayJoinCode))
+            {
+                // 정적 변수에 저장
+                RelayJoinCode = relayJoinCode;
+            
+                // PlayerPrefs에도 중복 저장
+                PlayerPrefs.SetString("RelayJoinCode", relayJoinCode);
+                PlayerPrefs.Save();
+            
+                Debug.Log($"저장된 Relay 조인 코드: {RelayJoinCode}");
+            }
+            else
+            {
+                Debug.LogWarning("매칭 성사되었으나 Relay 조인 코드를 찾을 수 없습니다!");
+            }
+            
             // 잠시 대기 후 다음 씬으로 이동
             yield return new WaitForSeconds(2f);
             
-            // 로비 ID와 캐릭터 정보를 PlayerPrefs를 통해 전달
-            PlayerPrefs.SetString("CurrentLobbyId", _lobbyId);
-            PlayerPrefs.SetInt("SelectedCharacterIndex", _selectedCharacterIndex);
-            PlayerPrefs.Save();
+            SaveSelectedCharacterInfo();
             
             // 다음 씬으로 이동
             SceneManager.LoadScene(_lobbySceneName);
         }
+    }
+    
+    /// <summary>
+    /// 선택된 캐릭터 정보 저장
+    /// </summary>
+    private void SaveSelectedCharacterInfo()
+    {
+        // 기본 정보 저장
+        PlayerPrefs.SetString("CurrentLobbyId", _lobbyId);
+        PlayerPrefs.SetInt("SelectedCharacterIndex", _selectedCharacterIndex);
+        
+        // 호스트 여부 저장
+        bool isHost = _currentLobby != null && _currentLobby.HostId == AuthenticationService.Instance.PlayerId;
+        PlayerPrefs.SetInt("IsHost", isHost ? 1 : 0);
+        
+        // 스킬 정보 저장 (필요시)
+        if (_selectedCharacterIndex >= 0 && _selectedCharacterIndex < _characterDataList.Length)
+        {
+            CharacterData selectedChar = _characterDataList[_selectedCharacterIndex];
+            
+            // 이름, 프리팹 경로 등 저장
+            PlayerPrefs.SetString("CharacterName", selectedChar.name);
+            
+            // 스킬 쿨다운 정보 저장
+            for (int i = 0; i < selectedChar.skills.Length && i < 4; i++)
+            {
+                if (selectedChar.skills[i] != null)
+                {
+                    PlayerPrefs.SetFloat($"SkillCooldown_{i}", selectedChar.skills[i].cooldown);
+                    PlayerPrefs.SetFloat($"SkillDamage_{i}", selectedChar.skills[i].damage);
+                }
+            }
+        }
+        
+        PlayerPrefs.Save();
+        
+        Debug.Log($"캐릭터 정보 저장 완료: 인덱스 {_selectedCharacterIndex}, 호스트: {isHost}");
     }
 
     /// <summary>
     /// 로비 검색 또는 생성 코루틴
     /// </summary>
     private IEnumerator FindOrCreateLobbyCoroutine()
-{
-    Debug.Log("로비 검색 또는 생성 시작");
-    
-    // 로비 검색 작업 시작
-    Task<List<Lobby>> findLobbiesTask = FindAvailableLobbies();
-    
-    // 작업 완료 대기
-    while (!findLobbiesTask.IsCompleted && _isMatchmaking)
     {
-        yield return null;
-    }
-    
-    // 매칭 취소 확인
-    if (!_isMatchmaking)
-    {
-        yield break;
-    }
-    
-    // 오류 확인
-    if (findLobbiesTask.IsFaulted)
-    {
-        _hasError = true;
-        _errorMessage = findLobbiesTask.Exception?.InnerException?.Message ?? "알 수 없는 오류";
-        yield break;
-    }
-    
-    // 결과 가져오기
-    List<Lobby> availableLobbies = findLobbiesTask.Result;
-    
-    // 적합한 MMR 범위의 로비 찾기
-    Lobby joinedLobby = null;
-    
-    foreach (Lobby lobby in availableLobbies)
-    {
-        if (!_isMatchmaking) yield break;
-        
-        if (lobby.Data.TryGetValue("MinMMR", out var minMMRData) && 
-            lobby.Data.TryGetValue("MaxMMR", out var maxMMRData))
-        {
-            int minMMR = int.Parse(minMMRData.Value);
-            int maxMMR = int.Parse(maxMMRData.Value);
-            
-            if (_playerMMR >= minMMR && _playerMMR <= maxMMR)
-            {
-                // 로비 참가 시도
-                Task<Lobby> joinLobbyTask = JoinLobby(lobby.Id);
-                
-                // 작업 완료 대기
-                while (!joinLobbyTask.IsCompleted && _isMatchmaking)
-                {
-                    yield return null;
-                }
-                
-                // 매칭 취소 확인
-                if (!_isMatchmaking)
-                {
-                    yield break;
-                }
-                
-                // 로비 참가 성공 확인
-                if (!joinLobbyTask.IsFaulted)
-                {
-                    joinedLobby = joinLobbyTask.Result;
-                    break;
-                }
-            }
-        }
-    }
-    
-    // 적합한 로비를 찾지 못한 경우 새로 생성
-    if (joinedLobby == null && _isMatchmaking)
-    {
-        // MMR 범위 계산
-        int minMMR = Math.Max(0, _playerMMR - _mmrRange);
-        int maxMMR = _playerMMR + _mmrRange;
-        
-        // 로비 옵션 설정
-        CreateLobbyOptions createOptions = new CreateLobbyOptions
-        {
-            IsPrivate = false,
-            Player = GetPlayerData(),
-            Data = new Dictionary<string, DataObject>
-            {
-                { "MinMMR", new DataObject(DataObject.VisibilityOptions.Public, minMMR.ToString()) },
-                { "MaxMMR", new DataObject(DataObject.VisibilityOptions.Public, maxMMR.ToString()) },
-                { "S1", new DataObject(DataObject.VisibilityOptions.Public, "Waiting") }, // 게임 상태 (S1: 문자열 1)
-                { "CharacterCount", new DataObject(DataObject.VisibilityOptions.Public, "0") } // 캐릭터 선택 카운트
-            }
-        };
-        
-        // 로비 이름 생성 (닉네임 + 랜덤 숫자)
-        string lobbyName = $"{_playerNickname}'s Lobby {UnityEngine.Random.Range(1000, 9999)}";
-        
-        // 로비 생성
-        Task<Lobby> createLobbyTask = CreateLobby(lobbyName, _maxPlayers, createOptions);
-        
+        Debug.Log("로비 검색 또는 생성 시작");
+
+        // 로비 검색 작업 시작
+        Task<List<Lobby>> findLobbiesTask = FindAvailableLobbies();
+
         // 작업 완료 대기
-        while (!createLobbyTask.IsCompleted && _isMatchmaking)
+        while (!findLobbiesTask.IsCompleted && _isMatchmaking)
         {
             yield return null;
         }
-        
+
         // 매칭 취소 확인
         if (!_isMatchmaking)
         {
             yield break;
         }
-        
+
         // 오류 확인
-        if (createLobbyTask.IsFaulted)
+        if (findLobbiesTask.IsFaulted)
         {
             _hasError = true;
-            _errorMessage = createLobbyTask.Exception?.InnerException?.Message ?? "알 수 없는 오류";
+            _errorMessage = findLobbiesTask.Exception?.InnerException?.Message ?? "알 수 없는 오류";
+            yield break;
+        }
+
+        // 결과 가져오기
+        List<Lobby> availableLobbies = findLobbiesTask.Result;
+
+        // 적합한 MMR 범위의 로비 찾기
+        Lobby joinedLobby = null;
+
+        foreach (Lobby lobby in availableLobbies)
+        {
+            if (!_isMatchmaking) yield break;
+
+            if (lobby.Data.TryGetValue("MinMMR", out var minMMRData) &&
+                lobby.Data.TryGetValue("MaxMMR", out var maxMMRData))
+            {
+                int minMMR = int.Parse(minMMRData.Value);
+                int maxMMR = int.Parse(maxMMRData.Value);
+
+                if (_playerMMR >= minMMR && _playerMMR <= maxMMR)
+                {
+                    // 로비 참가 시도
+                    Task<Lobby> joinLobbyTask = JoinLobby(lobby.Id);
+
+                    // 작업 완료 대기
+                    while (!joinLobbyTask.IsCompleted && _isMatchmaking)
+                    {
+                        yield return null;
+                    }
+
+                    // 매칭 취소 확인
+                    if (!_isMatchmaking)
+                    {
+                        yield break;
+                    }
+
+                    // 로비 참가 성공 확인
+                    if (!joinLobbyTask.IsFaulted)
+                    {
+                        joinedLobby = joinLobbyTask.Result;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // 적합한 로비를 찾지 못한 경우 새로 생성
+        if (joinedLobby == null && _isMatchmaking)
+        {
+            // MMR 범위 계산
+            int minMMR = Math.Max(0, _playerMMR - _mmrRange);
+            int maxMMR = _playerMMR + _mmrRange;
+
+            // 로비 옵션 설정
+            CreateLobbyOptions createOptions = new CreateLobbyOptions
+            {
+                IsPrivate = false,
+                Player = GetPlayerData(),
+                Data = new Dictionary<string, DataObject>
+                {
+                    { "MinMMR", new DataObject(DataObject.VisibilityOptions.Public, minMMR.ToString()) },
+                    { "MaxMMR", new DataObject(DataObject.VisibilityOptions.Public, maxMMR.ToString()) },
+                    { "S1", new DataObject(DataObject.VisibilityOptions.Public, "Waiting") }, // 게임 상태 (S1: 문자열 1)
+                    { "CharacterCount", new DataObject(DataObject.VisibilityOptions.Public, "0") } // 캐릭터 선택 카운트
+                }
+            };
+
+            // 로비 이름 생성 (닉네임 + 랜덤 숫자)
+            string lobbyName = $"{_playerNickname}'s Lobby {UnityEngine.Random.Range(1000, 9999)}";
+
+            // 로비 생성
+            Task<Lobby> createLobbyTask = CreateLobby(lobbyName, _maxPlayers, createOptions);
+
+            // 작업 완료 대기
+            while (!createLobbyTask.IsCompleted && _isMatchmaking)
+            {
+                yield return null;
+            }
+
+            // 매칭 취소 확인
+            if (!_isMatchmaking)
+            {
+                yield break;
+            }
+
+            // 오류 확인
+            if (createLobbyTask.IsFaulted)
+            {
+                _hasError = true;
+                _errorMessage = createLobbyTask.Exception?.InnerException?.Message ?? "알 수 없는 오류";
+                yield break;
+            }
+
+            joinedLobby = createLobbyTask.Result;
+        }
+
+        // 로비 참가/생성 성공 확인
+        if (joinedLobby != null)
+        {
+            _lobbyId = joinedLobby.Id;
+            _currentLobby = joinedLobby;
+            Debug.Log($"로비 {(_lobbyId == joinedLobby.Id ? "참가" : "생성")} 성공: {_lobbyId}");
+
+            // 현재 선택된 캐릭터 정보 업데이트
+            Task updatePlayerTask = UpdatePlayerCharacterAsync(_selectedCharacterIndex);
+
+            // 작업 완료 대기
+            while (!updatePlayerTask.IsCompleted && _isMatchmaking)
+            {
+                yield return null;
+            }
+
+            // 오류 확인
+            if (updatePlayerTask.IsFaulted)
+            {
+                Debug.LogWarning($"플레이어 캐릭터 정보 업데이트 실패: {updatePlayerTask.Exception?.InnerException?.Message}");
+                // 치명적 오류는 아니므로 계속 진행
+            }
+        }
+        else
+        {
+            _hasError = true;
+            _errorMessage = "적합한 로비를 찾거나 생성할 수 없습니다.";
+        }
+    }
+    
+    /// <summary>
+    /// Relay 조인 코드를 로비 데이터에 업데이트
+    /// </summary>
+    private IEnumerator UpdateLobbyWithRelayCode(string joinCode)
+    {
+        if (string.IsNullOrEmpty(_lobbyId))
+        {
+            Debug.LogError("로비 ID가 없어 Relay 코드를 업데이트할 수 없습니다.");
+            yield break;
+        }
+
+        Debug.Log($"로비 {_lobbyId}에 Relay 코드 업데이트 중: {joinCode} (길이: {joinCode.Length})");
+        
+        UpdateLobbyOptions options = new UpdateLobbyOptions
+        {
+            Data = new Dictionary<string, DataObject>
+            {
+                { "RelayJoinCode", new DataObject(DataObject.VisibilityOptions.Public, joinCode) }
+            }
+        };
+        
+        Task updateLobbyTask = null;
+        
+        try
+        {
+            updateLobbyTask = Lobbies.Instance.UpdateLobbyAsync(_lobbyId, options);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"로비 업데이트 호출 오류: {e.Message}");
             yield break;
         }
         
-        joinedLobby = createLobbyTask.Result;
-    }
-    
-    // 로비 참가/생성 성공 확인
-    if (joinedLobby != null)
-    {
-        _lobbyId = joinedLobby.Id;
-        _currentLobby = joinedLobby;
-        Debug.Log($"로비 {(_lobbyId == joinedLobby.Id ? "참가" : "생성")} 성공: {_lobbyId}");
+        // Task 완료 대기
+        yield return new WaitUntil(() => updateLobbyTask.IsCompleted);
         
-        // 현재 선택된 캐릭터 정보 업데이트
-        Task updatePlayerTask = UpdatePlayerCharacterAsync(_selectedCharacterIndex);
-        
-        // 작업 완료 대기
-        while (!updatePlayerTask.IsCompleted && _isMatchmaking)
+        // 결과 확인
+        if (updateLobbyTask.IsFaulted)
         {
-            yield return null;
+            Debug.LogError($"로비 업데이트 오류: {updateLobbyTask.Exception?.InnerException?.Message}");
         }
-        
-        // 오류 확인
-        if (updatePlayerTask.IsFaulted)
+        else
         {
-            Debug.LogWarning($"플레이어 캐릭터 정보 업데이트 실패: {updatePlayerTask.Exception?.InnerException?.Message}");
-            // 치명적 오류는 아니므로 계속 진행
+            Debug.Log("로비에 Relay 코드 업데이트 성공!");
+            
+            // 업데이트 확인을 위한 로비 정보 가져오기
+            Task<Lobby> getLobbyTask = null;
+            
+            try
+            {
+                getLobbyTask = Lobbies.Instance.GetLobbyAsync(_lobbyId);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"로비 정보 요청 오류: {e.Message}");
+                yield break;
+            }
+            
+            yield return new WaitUntil(() => getLobbyTask.IsCompleted);
+            
+            if (getLobbyTask.IsFaulted)
+            {
+                Debug.LogError($"로비 정보 가져오기 오류: {getLobbyTask.Exception?.InnerException?.Message}");
+            }
+            else
+            {
+                Lobby lobby = getLobbyTask.Result;
+                if (lobby.Data.TryGetValue("RelayJoinCode", out var codeData))
+                {
+                    Debug.Log($"로비 데이터 확인: RelayJoinCode = {codeData.Value} (길이: {codeData.Value.Length})");
+                    RelayJoinCode = codeData.Value;
+                }
+                else
+                {
+                    Debug.LogError("로비 데이터에 RelayJoinCode가 없습니다!");
+                }
+            }
         }
     }
-    else
-    {
-        _hasError = true;
-        _errorMessage = "적합한 로비를 찾거나 생성할 수 없습니다.";
-    }
-}
 
     /// <summary>
     /// 로비 정보 업데이트 가져오기
@@ -662,7 +928,7 @@ public class GameMainManager : MonoBehaviour
     /// </summary>
     private void StopMatchmaking()
     {
-
+    
         if (!_isMatchmaking) return;
         
         _isMatchmaking = false;
@@ -684,6 +950,7 @@ public class GameMainManager : MonoBehaviour
         // 로비 떠나기
         LeaveLobbyAsync();
     }
+    
 
     /// <summary>
     /// 로비 떠나기
@@ -804,6 +1071,9 @@ public class GameMainManager : MonoBehaviour
     /// </summary>
     private Player GetPlayerData()
     {
+        string charName = _selectedCharacterIndex >= 0 && _selectedCharacterIndex < _characterDataList.Length ? 
+            _characterDataList[_selectedCharacterIndex].name : "Unknown";
+            
         return new Player
         {
             Data = new Dictionary<string, PlayerDataObject>
@@ -811,6 +1081,7 @@ public class GameMainManager : MonoBehaviour
                 { "Nickname", new PlayerDataObject(PlayerDataObject.VisibilityOptions.Public, _playerNickname) },
                 { "MMR", new PlayerDataObject(PlayerDataObject.VisibilityOptions.Public, _playerMMR.ToString()) },
                 { "CharacterIndex", new PlayerDataObject(PlayerDataObject.VisibilityOptions.Public, _selectedCharacterIndex.ToString()) },
+                { "CharacterName", new PlayerDataObject(PlayerDataObject.VisibilityOptions.Public, charName) },
                 { "IsReady", new PlayerDataObject(PlayerDataObject.VisibilityOptions.Public, "false") }
             }
         };
@@ -823,6 +1094,9 @@ public class GameMainManager : MonoBehaviour
     {
         if (string.IsNullOrEmpty(_lobbyId))
             return;
+        
+        string charName = characterIndex >= 0 && characterIndex < _characterDataList.Length ?
+            _characterDataList[characterIndex].name : "Unknown";
             
         try
         {
@@ -831,11 +1105,12 @@ public class GameMainManager : MonoBehaviour
                 Data = new Dictionary<string, PlayerDataObject>
                 {
                     { "CharacterIndex", new PlayerDataObject(PlayerDataObject.VisibilityOptions.Public, characterIndex.ToString()) },
+                    { "CharacterName", new PlayerDataObject(PlayerDataObject.VisibilityOptions.Public, charName) },
                     { "IsReady", new PlayerDataObject(PlayerDataObject.VisibilityOptions.Public, "true") }
                 }
             });
             
-            Debug.Log($"플레이어 캐릭터 정보 업데이트: {characterIndex}");
+            Debug.Log($"플레이어 캐릭터 정보 업데이트: {characterIndex} ({charName})");
         }
         catch (Exception e)
         {
@@ -930,20 +1205,20 @@ public class GameMainManager : MonoBehaviour
     private IEnumerator PollLobbyForUpdates()
     {
         WaitForSeconds updateInterval = new WaitForSeconds(_lobbyUpdateInterval);
-
+    
         while (_isMatchmaking && !string.IsNullOrEmpty(_lobbyId))
         {
             yield return updateInterval;
-
+    
             if (!_isMatchmaking) yield break;
-
+    
             bool success = false;
             string errorMsg = "";
             Lobby updatedLobby = null;
-
+    
             // 로비 정보 업데이트
             Task<Lobby> lobbyUpdateTask = GetLobbyUpdate();
-
+    
             // 작업 완료 대기
             float startTime = Time.time;
             while (!lobbyUpdateTask.IsCompleted)
@@ -954,10 +1229,10 @@ public class GameMainManager : MonoBehaviour
                     errorMsg = "로비 업데이트 타임아웃";
                     break;
                 }
-
+    
                 yield return null;
             }
-
+    
             // 오류 확인
             if (lobbyUpdateTask.IsFaulted)
             {
@@ -969,12 +1244,12 @@ public class GameMainManager : MonoBehaviour
                 success = true;
                 updatedLobby = lobbyUpdateTask.Result;
             }
-
+    
             // 업데이트 실패 처리
             if (!success)
             {
                 Debug.LogError($"로비 업데이트 오류: {errorMsg}");
-
+    
                 // 로비가 존재하지 않는 경우
                 if (errorMsg.Contains("404") || errorMsg.Contains("Not Found"))
                 {
@@ -983,19 +1258,19 @@ public class GameMainManager : MonoBehaviour
                     _errorMessage = "로비가 종료되었습니다.";
                     _matchingStatusText.text = "로비가 종료되었습니다.";
                 }
-
+    
                 continue; // 다음 업데이트 시도
             }
-
+    
             // 로비 정보 업데이트 성공
             _currentLobby = updatedLobby;
-
+    
             // 플레이어 수 확인
             int playerCount = updatedLobby.Players.Count;
             int readyPlayers = CountReadyPlayers(updatedLobby);
-
+    
             Debug.Log($"로비 상태: {playerCount}/{updatedLobby.MaxPlayers} 플레이어, {readyPlayers} 준비 완료");
-
+    
             // 게임 시작 조건 확인
             if (playerCount >= _minPlayersToStart && readyPlayers == playerCount)
             {
@@ -1010,7 +1285,7 @@ public class GameMainManager : MonoBehaviour
                     }
                 }
             }
-
+    
             // 게임 시작 확인
             if (updatedLobby.Data.TryGetValue("S1", out var state) && state.Value == "Starting")
             {
@@ -1027,7 +1302,7 @@ public class GameMainManager : MonoBehaviour
                 string nickname = player.Data.TryGetValue("Nickname", out var nameData) ? nameData.Value : "Unknown";
                 Debug.Log($"플레이어 {nickname} (ID: {player.Id}), 준비 상태: {isReady}");
             }
-
+    
             // 현재 로비 상태 로깅
             string currentState = updatedLobby.Data.TryGetValue("S1", out var stateData) ? stateData.Value : "Unknown";
             Debug.Log($"현재 로비 상태: {currentState}, 호스트 ID: {updatedLobby.HostId}, 내 ID: {AuthenticationService.Instance.PlayerId}");

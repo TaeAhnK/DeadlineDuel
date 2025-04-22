@@ -1,59 +1,131 @@
 using UnityEngine;
+using Cinemachine;
 using Unity.Netcode;
 
-public class QuadViewController : MonoBehaviour
+public class QuadViewCinemachine : MonoBehaviour
 {
-    [Header("대상 설정")]
-    [SerializeField] private Transform _target; // 따라갈 타겟 (플레이어)
+    [Header("시네머신 설정")]
+    [SerializeField] private CinemachineVirtualCamera _virtualCamera;
     
-    [Header("카메라 설정")]
-    [SerializeField] private float _distance = 10f; // 타겟으로부터의 거리
-    [SerializeField] private float _height = 8f; // 타겟으로부터의 높이
-    [SerializeField] private float _angle = 45f; // 카메라 기울기 각도
+    [Header("카메라 거리 설정")]
+    [SerializeField] private float _mouseScrollSpeed = 5f;
+    [SerializeField] private float _minCameraDistance = 10f;
+    [SerializeField] private float _maxCameraDistance = 30f;
     
     [Header("카메라 이동 설정")]
-    [SerializeField] private float _smoothSpeed = 5f; // 카메라 이동 부드러움 정도
-    [SerializeField] private Vector3 _offset = Vector3.zero; // 추가 오프셋
-
-    // 플레이어 참조를 설정하는 메서드
-    public void SetTarget(Transform target)
+    [SerializeField] private float _mouseEdgeScrollSpeed = 15f;
+    [SerializeField] private int _edgeThreshold = 20; // 화면 가장자리 픽셀
+    [SerializeField] private Transform _cameraTarget; // 카메라가 따라갈 타겟
+    
+    // 시네머신 컴포넌트
+    private CinemachineFramingTransposer _framingTransposer;
+    
+    // 로컬 플레이어 참조
+    private Transform _playerTransform;
+    private bool _isFollowingPlayer = true;
+    
+    private void Start()
     {
-        _target = target;
-    }
-
-    private void LateUpdate()
-    {
-        if (_target == null)
-            return;
-
-        // 타겟 위치 계산
-        Vector3 targetPosition = _target.position + _offset;
+        // 시네머신 카메라 참조 가져오기
+        if (_virtualCamera == null)
+            _virtualCamera = GetComponent<CinemachineVirtualCamera>();
+            
+        // 프레이밍 트랜스포저 참조 가져오기
+        _framingTransposer = _virtualCamera.GetCinemachineComponent<CinemachineFramingTransposer>();
         
-        // 카메라 위치 계산
-        Vector3 desiredPosition = CalculateCameraPosition(targetPosition);
+        // 초기 카메라 타겟 설정
+        if (_cameraTarget == null)
+        {
+            // 새로운 빈 게임오브젝트를 카메라 타겟으로 생성
+            GameObject targetObj = new GameObject("CameraTarget");
+            _cameraTarget = targetObj.transform;
+            
+            // 씬 전환 시에도 파괴되지 않도록 설정
+            DontDestroyOnLoad(targetObj);
+        }
         
-        // 부드러운 이동 적용
-        Vector3 smoothedPosition = Vector3.Lerp(transform.position, desiredPosition, _smoothSpeed * Time.deltaTime);
-        transform.position = smoothedPosition;
+        // 시네머신 카메라의 타겟 설정
+        _virtualCamera.Follow = _cameraTarget;
         
-        // 카메라가 타겟을 바라보도록 설정
-        transform.LookAt(targetPosition);
+        // 쿼드뷰 각도 설정 (X 회전)
+        _virtualCamera.transform.rotation = Quaternion.Euler(45f, 0f, 0f);
     }
     
-    private Vector3 CalculateCameraPosition(Vector3 targetPosition)
+    private void Update()
     {
-        // 각도를 라디안으로 변환
-        float angleRad = _angle * Mathf.Deg2Rad;
+        // 로컬 플레이어만 카메라 제어 가능
+        if (_playerTransform == null)
+            return;
+            
+        // 마우스 휠로 줌인/줌아웃
+        float scrollDelta = Input.mouseScrollDelta.y;
+        if (scrollDelta != 0)
+        {
+            float newDistance = _framingTransposer.m_CameraDistance - scrollDelta * _mouseScrollSpeed;
+            _framingTransposer.m_CameraDistance = Mathf.Clamp(newDistance, _minCameraDistance, _maxCameraDistance);
+        }
         
-        // X, Z 평면에서의 방향 벡터 계산 (쿼드뷰는 주로 X, Z 평면에서 북동쪽)
-        float dirX = Mathf.Sin(angleRad) * _distance;
-        float dirZ = Mathf.Cos(angleRad) * _distance;
+        // 화면 가장자리에서 마우스로 카메라 이동 (프리룩 모드에서만)
+        if (!_isFollowingPlayer)
+        {
+            Vector3 moveDirection = Vector3.zero;
+            
+            // 마우스 위치 확인
+            Vector3 mousePos = Input.mousePosition;
+            
+            // 화면 가장자리 검사
+            if (mousePos.x < _edgeThreshold)
+                moveDirection.x = -1;
+            else if (mousePos.x > Screen.width - _edgeThreshold)
+                moveDirection.x = 1;
+                
+            if (mousePos.y < _edgeThreshold)
+                moveDirection.z = -1;
+            else if (mousePos.y > Screen.height - _edgeThreshold)
+                moveDirection.z = 1;
+                
+            // 카메라 타겟 이동
+            if (moveDirection != Vector3.zero)
+            {
+                moveDirection = Quaternion.Euler(0, _virtualCamera.transform.eulerAngles.y, 0) * moveDirection;
+                _cameraTarget.position += moveDirection * _mouseEdgeScrollSpeed * Time.deltaTime;
+            }
+        }
+        else
+        {
+            // 플레이어 팔로우 모드일 때는 카메라 타겟을 플레이어 위치로 설정
+            _cameraTarget.position = _playerTransform.position;
+        }
         
-        // 카메라 최종 위치 계산
-        return new Vector3(
-            targetPosition.x - dirX,  // X 좌표
-            targetPosition.y + _height, // Y 좌표 (높이)
-            targetPosition.z - dirZ   // Z 좌표
-        );
+        // F 키를 누르면 프리룩 모드와 플레이어 팔로우 모드 토글
+        if (Input.GetKeyDown(KeyCode.F))
+        {
+            _isFollowingPlayer = !_isFollowingPlayer;
+        }
+        
+        // 스페이스바로 플레이어에 카메라 즉시 고정
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            // 플레이어 팔로우 모드로 전환
+            _isFollowingPlayer = true;
+            
+            // 카메라 타겟을 플레이어 위치로 즉시 이동
+            _cameraTarget.position = _playerTransform.position;
+            
+            // 워프 효과로 부드럽게 이동
+            _framingTransposer.OnTargetObjectWarped(_cameraTarget, _cameraTarget.position - transform.position);
+        }
+    }
+    
+    // 플레이어 타겟 설정 메서드
+    public void SetTarget(Transform playerTransform)
+    {
+        _playerTransform = playerTransform;
+        
+        // 초기에 카메라 타겟을 플레이어 위치로 설정
+        if (_cameraTarget != null && playerTransform != null)
+        {
+            _cameraTarget.position = playerTransform.position;
+        }
     }
 }

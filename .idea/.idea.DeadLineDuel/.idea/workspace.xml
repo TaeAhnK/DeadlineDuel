@@ -5,99 +5,23 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1ef3ec2e-6ecc-4479-badc-e18c7073aaca" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.DeadLineDuel/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.DeadLineDuel/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/01.Scenes/01.GameInitialization.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/01.Scenes/01.GameInitialization.unity" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/01.Scenes/02.GameLobby.unity" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/01.Scenes/02.GameLobby.unity.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/01.Scenes/03.GameCharacterSelect.unity" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/01.Scenes/03.GameCharacterSelect.unity.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/03.Prefabs/ClientManager.prefab" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/03.Prefabs/ClientManager.prefab.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/03.Prefabs/HostManager.prefab" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/03.Prefabs/HostManager.prefab.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/03.Prefabs/ServerManager.prefab" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/03.Prefabs/ServerManager.prefab.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/01.Scenes/02.GameMain.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/01.Scenes/02.GameMain.unity" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/01.Scenes/03.GameLobby.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/01.Scenes/03.GameLobby.unity" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Manager/GameLobbyManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Manager/GameLobbyManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Manager/GameMainManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Manager/GameMainManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Player/PlayerController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Player/PlayerController.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Player/QuadViewController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Player/QuadViewController.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/03.Prefabs/Player.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/03.Prefabs/Player.prefab" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/03.Prefabs/Player.prefab.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/03.Prefabs/Player.prefab.meta" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/DefaultNetworkPrefabs.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/DefaultNetworkPrefabs.asset" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/TextMesh Pro/Resources/Fonts &amp; Materials/LiberationSans SDF - Fallback.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/TextMesh Pro/Resources/Fonts &amp; Materials/LiberationSans SDF - Fallback.asset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/TextMesh Pro/Resources/Fonts &amp; Materials/LiberationSans SDF.asset.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnityChanSSU.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/AutoSpringBoneSetup.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/AutoSpringBoneSetup.cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/GUIElements.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/GUIElements.cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Icons.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Icons/Delete.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Icons/Delete.png.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Icons/NewDocumentHS.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Icons/NewDocumentHS.png.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Icons/OpenHH.bmp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Icons/OpenHH.bmp.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Icons/Pivot.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Icons/Pivot.png.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Icons/SaveHH.bmp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Icons/SaveHH.bmp.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Icons/SpringCapsuleIcon.tga" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Icons/SpringCapsuleIcon.tga.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Icons/SpringIcon.tga" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Icons/SpringIcon.tga.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Icons/SpringPanelIcon.tga" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Icons/SpringPanelIcon.tga.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Icons/SpringSphereIcon.tga" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Icons/SpringSphereIcon.tga.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Inspectors.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Inspectors/AngleLimitsPropertyInfo.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Inspectors/AngleLimitsPropertyInfo.cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Inspectors/InspectorFloatSlider.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Inspectors/InspectorFloatSlider.cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Inspectors/InspectorPropertyInfo.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Inspectors/InspectorPropertyInfo.cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Inspectors/SpringBoneInspector.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Inspectors/SpringBoneInspector.cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Inspectors/SpringBonePivotInspector.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Inspectors/SpringBonePivotInspector.cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Inspectors/SpringCapsuleColliderInspector.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Inspectors/SpringCapsuleColliderInspector.cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Inspectors/SpringColliderBoneSelector.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Inspectors/SpringColliderBoneSelector.cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Inspectors/SpringManagerInspector.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Inspectors/SpringManagerInspector.cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Inspectors/SpringPanelColliderInspector.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Inspectors/SpringPanelColliderInspector.cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Inspectors/SpringSphereColliderInspector.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Inspectors/SpringSphereColliderInspector.cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/SpringBoneGUIStyles.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/SpringBoneGUIStyles.cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Windows.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Windows/LoadSpringBoneSetupWindow.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Windows/LoadSpringBoneSetupWindow.cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Windows/MirrorSpringBoneWindow.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Windows/MirrorSpringBoneWindow.cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Windows/SaveSpringBoneSetupWindow.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Windows/SaveSpringBoneSetupWindow.cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Windows/SpringBoneSetupErrorWindow.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Windows/SpringBoneSetupErrorWindow.cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Windows/SpringBoneWindow.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/GUI/Windows/SpringBoneWindow.cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/SpringBoneEditorActions.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/SpringBoneEditorActions.cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/SpringColliderEditorActions.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/SpringColliderEditorActions.cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/Utility.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/Utility/FindGameObjectsWindow.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/Utility/FindGameObjectsWindow.cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/Utility/Inspector3DRenderer.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/Utility/Inspector3DRenderer.cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/Utility/SetObjectParentWindow.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/Utility/SetObjectParentWindow.cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/com.unity.animations.springbone.editor.asmdef" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/UnityChanSpringBone-release-1.1/Editor/com.unity.animations.springbone.editor.asmdef.meta" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/Packages/manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/manifest.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Packages/packages-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/packages-lock.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ProjectSettings/EditorBuildSettings.asset" beforeDir="false" afterPath="$PROJECT_DIR$/ProjectSettings/EditorBuildSettings.asset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ProjectSettings/ProjectSettings.asset" beforeDir="false" afterPath="$PROJECT_DIR$/ProjectSettings/ProjectSettings.asset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ProjectSettings/QualitySettings.asset" beforeDir="false" afterPath="$PROJECT_DIR$/ProjectSettings/QualitySettings.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ProjectSettings/NavMeshAreas.asset" beforeDir="false" afterPath="$PROJECT_DIR$/ProjectSettings/NavMeshAreas.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ProjectSettings/UnityConnectSettings.asset" beforeDir="false" afterPath="$PROJECT_DIR$/ProjectSettings/UnityConnectSettings.asset" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -109,14 +33,27 @@
   </component>
   <component name="HighlightingSettingsPerFile">
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/9384495d2a482ac7341d67ca84e16d267d16c62458a9d67a92b119199a9/System.Threading.Tasks.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/02.Scripts/SJ/Data/CharacterData.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/02.Scripts/SJ/Data/SwordCharacterData.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/02.Scripts/SJ/LobbySceneLoader.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/02.Scripts/SJ/Manager/GameInitManager.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/02.Scripts/SJ/Manager/GameLobbyManager.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/02.Scripts/SJ/Player/MoveIndicatorController.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/02.Scripts/SJ/Player/PlayerCustomizer.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/02.Scripts/SJ/Player/QuadViewController.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/02.Scripts/SJ/Skill/SkillEffects.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/02.Scripts/SJ/Skill/SwordCharacterSkillsExtension.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Library/PackageCache/com.unity.netcode.gameobjects@1.12.2/Runtime/Messaging/RpcAttributes.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Library/PackageCache/com.unity.services.authentication@3.4.1/Runtime/IAuthenticationService.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Library/PackageCache/com.unity.services.lobby@1.3.0/Runtime/Models/Lobby.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Library/PackageCache/com.unity.services.lobby@1.3.0/Runtime/Models/Player.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Library/PackageCache/com.unity.services.lobby@1.3.0/Runtime/Models/PlayerDataObject.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Library/PackageCache/com.unity.services.lobby@1.3.0/Runtime/SDK/ILobbyService.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Library/PackageCache/com.unity.services.matchmaker@1.1.5/Runtime/Models/CreateTicketResponse.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Library/PackageCache/com.unity.services.matchmaker@1.1.5/Runtime/Models/MultiplayAssignment.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Library/PackageCache/com.unity.services.matchmaker@1.1.5/Runtime/Models/TicketStatusResponse.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Library/PackageCache/com.unity.services.matchmaker@1.1.5/Runtime/SDK/CreateTicketOptions.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Library/PackageCache/com.unity.services.matchmaker@1.1.5/Runtime/SDK/IMatchmakerService.cs" root0="SKIP_HIGHLIGHTING" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;customColor&quot;: &quot;&quot;,
@@ -148,7 +85,7 @@
 }</component>
   <component name="RunManager" selected="Attach to Unity Editor.Attach to Unity Editor">
     <configuration name="Standalone Player" type="RunUnityExe" factoryName="Unity Executable">
-      <option name="EXE_PATH" value="$PROJECT_DIR$/testClient\MitaRender.exe" />
+      <option name="EXE_PATH" value="$PROJECT_DIR$/testClient\DeadLineDuel.exe" />
       <option name="PROGRAM_PARAMETERS" value="" />
       <option name="WORKING_DIRECTORY" value="D:\Unity_Project_Git\DeadLineDuel\testClient" />
       <option name="PASS_PARENT_ENVS" value="1" />
@@ -205,7 +142,10 @@
       <workItem from="1744334805364" duration="3420000" />
       <workItem from="1744602415950" duration="9957000" />
       <workItem from="1744682341188" duration="11062000" />
-      <workItem from="1744775959882" duration="3675000" />
+      <workItem from="1744775959882" duration="4890000" />
+      <workItem from="1744943931236" duration="9476000" />
+      <workItem from="1745199479154" duration="22861000" />
+      <workItem from="1745295769952" duration="995000" />
     </task>
     <servers />
   </component>
