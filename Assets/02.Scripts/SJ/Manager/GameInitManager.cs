@@ -108,31 +108,38 @@ public class GameInitManager : MonoBehaviour
     // 진행 상태 업데이트 (애니메이션 적용)
     private void UpdateProgress(float progress, string statusMessage = null)
     {
-        // 진행바 채우기 애니메이션
-        _progressBarFill.DOFillAmount(progress, 0.3f).SetEase(Ease.OutQuad);
-    
-        // 로딩바 프레임의 너비 구하기
-        RectTransform frameRectTransform = _progressBarFill.transform.parent as RectTransform;
-        float frameWidth = frameRectTransform.rect.width;
-    
-        // 핸들이 이동할 수 있는 실제 가용 범위 계산
-        float handleWidth = _progressBarHandle.rect.width;
-    
-        // 핸들이 로딩바 내부에 완전히 들어가도록 위치 범위 조정
-        // 왼쪽 끝 = 프레임 왼쪽 + 핸들 너비/2
-        // 오른쪽 끝 = 프레임 오른쪽 - 핸들 너비/2
-        float leftEdge = -frameWidth/2 + handleWidth/2;
-        float rightEdge = frameWidth/2 - handleWidth/2;
-    
-        // 계산된 범위 내에서 진행 상태에 따라 위치 결정
-        float targetX = Mathf.Lerp(leftEdge, rightEdge, progress);
-    
-        // 핸들 위치 애니메이션
-        _progressBarHandle.DOAnchorPosX(targetX, 0.3f).SetEase(Ease.OutQuad);
+        // KTW 슬라이더 Value 애니메이션 
+        if (_loadingPanel.TryGetComponent(out Slider slider)) {
+            // Slider exists - use DOValue animation
+            slider.DOValue(progress, 0.3f).SetEase(Ease.OutQuad);
+        }
+        // KTW 슬라이더 미적용시 기존 코드 실행
+        else {
+            // 진행바 채우기 애니메이션
+            _progressBarFill.DOFillAmount(progress, 0.3f).SetEase(Ease.OutQuad);
+
+            // 로딩바 프레임의 너비 구하기
+            RectTransform frameRectTransform = _progressBarFill.transform.parent as RectTransform;
+            float frameWidth = frameRectTransform.rect.width;
+
+            // 핸들이 이동할 수 있는 실제 가용 범위 계산
+            float handleWidth = _progressBarHandle.rect.width;
+
+            // 핸들이 로딩바 내부에 완전히 들어가도록 위치 범위 조정
+            // 왼쪽 끝 = 프레임 왼쪽 + 핸들 너비/2
+            // 오른쪽 끝 = 프레임 오른쪽 - 핸들 너비/2
+            float leftEdge = -frameWidth / 2 + handleWidth / 2;
+            float rightEdge = frameWidth / 2 - handleWidth / 2;
+
+            // 계산된 범위 내에서 진행 상태에 따라 위치 결정
+            float targetX = Mathf.Lerp(leftEdge, rightEdge, progress);
+
+            // 핸들 위치 애니메이션
+            _progressBarHandle.DOAnchorPosX(targetX, 0.3f).SetEase(Ease.OutQuad);
+        }
         
         // 상태 메시지 업데이트 (제공된 경우)
-        if (!string.IsNullOrEmpty(statusMessage))
-        {
+        if (!string.IsNullOrEmpty(statusMessage)) {
             _statusText.text = statusMessage;
         }
     }
