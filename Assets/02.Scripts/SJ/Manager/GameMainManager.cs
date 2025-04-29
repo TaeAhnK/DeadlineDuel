@@ -28,18 +28,14 @@ public class GameMainManager : MonoBehaviour
     [SerializeField] private string _lobbySceneName = "03.GameLobby";
 
     [Header("UI 패널")] // 태우님 UI 가져오면 수정해야할 부분
-    [SerializeField] private GameObject _mainMenuPanel;
-    [SerializeField] private GameObject _characterSelectPanel;
+    [SerializeField] private UI_MainMenu _mainMenuUI;
+    [SerializeField] private UI_CharacterSelect _characterSelectUI;
     
     [Header("매칭 상태 UI")] //태우님 UI가져오면 수정해야할 부분
     [SerializeField] private TextMeshProUGUI _matchingStatusText;
     [SerializeField] private Button _startMatchmakingButton; // 시작/취소 버튼으로 겸용
     [SerializeField] private TextMeshProUGUI _startMatchmakingButtonText; // 버튼 텍스트 내용
 
-    [Header("메인 메뉴 UI")]
-    [SerializeField] private Button _startGameButton;
-    [SerializeField] private Button _settingsButton;
-    [SerializeField] private Button _quitButton;
 
     [Header("캐릭터 선택 UI")] // 태우님 UI가져오면 수정해야할 부분
     [SerializeField] private Button[] _characterButtons; // 캐릭터 선택 버튼 배열
@@ -96,11 +92,12 @@ public class GameMainManager : MonoBehaviour
         }
 
         // UI 초기 설정
-        _mainMenuPanel.SetActive(true);
-        _characterSelectPanel.SetActive(false);
-        _matchingStatusText.gameObject.SetActive(false);
+        _mainMenuUI.gameObject.SetActive(true);
+        _characterSelectUI.gameObject.SetActive(false);
+        // _matchingStatusText.gameObject.SetActive(false);
 
         // 캐릭터 버튼 기본 색상 저장
+
         if (_characterButtons.Length > 0)
         {
             _defaultCharacterButtonColor = _characterButtons[0].GetComponent<Image>().color;
@@ -111,10 +108,7 @@ public class GameMainManager : MonoBehaviour
     {
         // 이전 씬에서 플레이어 정보 가져오기
         GetPlayerInfoFromInitManager();
-
-        // UI 이벤트 리스너 등록
-        SetupUIListeners();
-        
+                
         // 캐릭터 데이터 검증
         ValidateCharacterData();
     }
@@ -198,103 +192,26 @@ public class GameMainManager : MonoBehaviour
     }
 
     /// <summary>
-    /// UI 이벤트 리스너 설정 (캐릭터 이미지버튼 기능하는부분)
+    /// UI_CharacterSelect에서 사용
     /// </summary>
-    private void SetupUIListeners()
-    {
-        // 메인 메뉴 버튼
-        _startGameButton.onClick.AddListener(OnStartGameClicked);
-        _settingsButton.onClick.AddListener(OnSettingsClicked);
-        _quitButton.onClick.AddListener(OnQuitClicked);
-
-        // 캐릭터 선택 버튼
-        for (int i = 0; i < _characterButtons.Length && i < _characterDataList.Length; i++)
-        {
-            int characterIndex = i; // 클로저로 인덱스 캡처
-            _characterButtons[i].onClick.AddListener(() => OnCharacterSelected(characterIndex));
-
-            // 캐릭터 아이콘 이미지 설정
-            Image buttonImage = _characterButtons[i].GetComponent<Image>();
-            if (buttonImage != null && _characterDataList[i].portraitImage != null)
-            {
-                buttonImage.sprite = _characterDataList[i].portraitImage;
-            }
-        }
-
-        // 매칭 시작 및 취소 버튼
-        _startMatchmakingButton.onClick.AddListener(OnStartMatchmakingClicked);
-
-        // 뒤로가기 버튼
-        if (_backToMainButton != null)
-        {
-            _backToMainButton.onClick.AddListener(OnBackToMainClicked);
-        }
-        
-        //초기상태
-        _matchingStatusText.gameObject.SetActive(false);
+    public Sprite GetCharacterPortraitImage(int index) {
+        return _characterDataList[index].portraitImage;
     }
 
 
     /// <summary>
     /// "Game Start" 버튼 클릭 처리
     /// </summary>
-    private void OnStartGameClicked()
+    public void OnStartGameClicked()
     {
-        _mainMenuPanel.SetActive(false);
-        _characterSelectPanel.SetActive(true);
-        
+        _mainMenuUI.gameObject.SetActive(false);
+        _characterSelectUI.gameObject.SetActive(true);
+
         // 기본 상태 초기화
-        _selectedCharacterIndex = -1;
-        ResetCharacterButtonColors();
-        UpdateStartMatchmakingButtonState();
+        _characterSelectUI.InitState();
     }
-
-    /// <summary>
-    /// "Setting" 버튼 클릭 처리
-    /// </summary>
-    private void OnSettingsClicked()
-    {
-        // 설정 UI 표시 로직 구현
-        Debug.Log("설정 버튼 클릭");
-        // TODO: 설정 패널 표시 (아직 구현 안함)
-    }
-
-    /// <summary>
-    /// "Quit" 버튼 클릭 처리
-    /// </summary>
-    private void OnQuitClicked()
-    {
-        #if UNITY_EDITOR
-        UnityEditor.EditorApplication.isPlaying = false;
-        #else
-        Application.Quit();
-        #endif
-    }
-
-    /// <summary>
-    /// 캐릭터 선택 처리
-    /// </summary>
-    private void OnCharacterSelected(int characterIndex)
-    {
-        // 이전 선택 초기화
-        if (_selectedCharacterIndex >= 0 && _selectedCharacterIndex < _characterButtons.Length)
-        {
-            _characterButtons[_selectedCharacterIndex].GetComponent<Image>().color = _defaultCharacterButtonColor;
-        }
-
-        // 새 캐릭터 선택
-        _selectedCharacterIndex = characterIndex;
-        _characterButtons[characterIndex].GetComponent<Image>().color = _selectedCharacterButtonColor;
         
-        // 캐릭터 정보 UI 업데이트
-        UpdateCharacterInfoUI(characterIndex);
-        
-        // 매칭 시작 버튼 상태 업데이트
-        UpdateStartMatchmakingButtonState();
-        
-        Debug.Log($"캐릭터 {characterIndex} 선택됨");
-    }
-    
+    // TODO 권태우 : 이거는 사용할지 말지?
     /// <summary>
     /// 캐릭터 정보 UI 업데이트 -> 캐릭터의 정보를 가져와서 넣는부분(캐릭터설명 or 특징들)
     /// </summary>
@@ -336,29 +253,14 @@ public class GameMainManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// 캐릭터 버튼 색상 초기화
-    /// </summary>
-    private void ResetCharacterButtonColors()
-    {
-        foreach (Button button in _characterButtons)
-        {
-            button.GetComponent<Image>().color = _defaultCharacterButtonColor;
-        }
-    }
-
-    /// <summary>
-    /// 매칭 시작 버튼 상태 업데이트
-    /// </summary>
-    private void UpdateStartMatchmakingButtonState()
-    {
-        _startMatchmakingButton.interactable = (_selectedCharacterIndex >= 0);
+    public void SetSelectCharacterIndex(int index) {
+        _selectedCharacterIndex = index;
     }
 
     /// <summary>
     /// "매칭 시작" 버튼 클릭 처리
     /// </summary>
-    private void OnStartMatchmakingClicked()
+    public void OnStartMatchmakingClicked()
     {
         if (_isMatchmaking)
         {
@@ -377,12 +279,7 @@ public class GameMainManager : MonoBehaviour
         _hasError = false;
         _errorMessage = "";
         
-        // UI 업데이트
-        _matchingStatusText.gameObject.SetActive(true);
-        _startMatchmakingButtonText.text = "취소";
-        
-        //버튼이 계속 클릭 가능하도록 유지
-        _startMatchmakingButton.interactable = true;
+        // UI 업데이트는 UI_CharacterSelect에서 처리함;
         
         // 매칭 프로세스 시작
         _matchmakingCoroutine = StartCoroutine(StartMatchmaking());
@@ -943,9 +840,9 @@ public class GameMainManager : MonoBehaviour
         if (_lobbyUpdateCoroutine != null)
             StopCoroutine(_lobbyUpdateCoroutine);
         
-        // UI 복원
-        _startMatchmakingButtonText.text = "매칭 시작";
-        _matchingStatusText.text = "매칭이 취소되었습니다.";
+        // UI 복원 -> TODO UI_CharacterSelect에서 했으나 취소 메시지 넣을지.
+        // _startMatchmakingButtonText.text = "매칭 시작";
+        // _matchingStatusText.text = "매칭이 취소되었습니다.";
             
         // 로비 떠나기
         LeaveLobbyAsync();
@@ -977,10 +874,10 @@ public class GameMainManager : MonoBehaviour
     /// <summary>
     /// 메인 메뉴로 돌아가기
     /// </summary>
-    private void OnBackToMainClicked()
+    public void OnBackToMainClicked()
     {
-        _characterSelectPanel.SetActive(false);
-        _mainMenuPanel.SetActive(true);
+        _characterSelectUI.gameObject.SetActive(false);
+        _mainMenuUI.gameObject.SetActive(true);
     }
 
     /// <summary>
