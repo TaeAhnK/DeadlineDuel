@@ -51,6 +51,8 @@ public class GameMainManager : MonoBehaviour
     [Header("캐릭터 데이터")]
     [SerializeField] private CharacterData[] _characterDataList; // 캐릭터 데이터 배열
     
+     
+    
     // 플레이어 정보
     private string _playerId;
     private string _playerNickname;
@@ -117,6 +119,14 @@ public class GameMainManager : MonoBehaviour
     {
         // 이전 씬에서 플레이어 정보 가져오기
         GetPlayerInfoFromInitManager();
+        
+        // 이전 세션 데이터가 있다면 정리 (로비에서 돌아온 경우)
+        if (!string.IsNullOrEmpty(PlayerPrefs.GetString("RelayJoinCode", "")) || 
+            !string.IsNullOrEmpty(PlayerPrefs.GetString("CurrentLobbyId", "")))
+        {
+            Debug.Log("이전 세션 데이터 감지, 정리 중...");
+            ClearPreviousSessionData();
+        }
 
         // UI 이벤트 리스너 등록
         SetupUIListeners();
@@ -270,6 +280,15 @@ public class GameMainManager : MonoBehaviour
     /// </summary>
     private void OnQuitClicked()
     {
+        // 이전 세션 데이터 정리
+        ClearPreviousSessionData();
+        
+        // 로그아웃 처리
+        GameInitManager initManager = GameInitManager.GetInstance();
+        if (initManager != null)
+        {
+            initManager.LogoutPlayer();
+        }
         #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
         #else
@@ -1339,6 +1358,7 @@ public class GameMainManager : MonoBehaviour
         // PlayerPrefs에서 이전 세션 데이터 삭제
         PlayerPrefs.DeleteKey("RelayJoinCode");
         PlayerPrefs.DeleteKey("CurrentLobbyId");
+  
     
         // 기타 필요한 키 삭제
         // PlayerPrefs.DeleteKey("IsHost");

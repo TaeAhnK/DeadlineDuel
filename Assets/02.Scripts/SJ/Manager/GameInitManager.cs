@@ -367,15 +367,19 @@ public class GameInitManager : MonoBehaviour
     {
         try
         {
-            Debug.Log("세션 토큰으로 자동 로그인 시도");
+            // 자동 로그인 비활성화 - 항상 새로 로그인하도록 설정
+            _isLoggedIn = false;
+            return;
             
-            // 익명 인증으로 로그인 
-            await AuthenticationService.Instance.SignInAnonymouslyAsync();
-            
-            PlayerId = AuthenticationService.Instance.PlayerId;
-            _isLoggedIn = true;
-            
-            Debug.Log($"자동 로그인 성공. 플레이어 ID: {PlayerId}");
+            // Debug.Log("세션 토큰으로 자동 로그인 시도");
+            //
+            // // 익명 인증으로 로그인 
+            // await AuthenticationService.Instance.SignInAnonymouslyAsync();
+            //
+            // PlayerId = AuthenticationService.Instance.PlayerId;
+            // _isLoggedIn = true;
+            //
+            // Debug.Log($"자동 로그인 성공. 플레이어 ID: {PlayerId}");
         }
         catch (Exception e)
         {
@@ -497,6 +501,44 @@ public class GameInitManager : MonoBehaviour
         _loadingErrorText.gameObject.SetActive(false);
         _hasError = false;
         StartCoroutine(InitializeGame());
+    }
+    
+    /// <summary>
+    /// 플레이어 로그아웃 및 세션 데이터 초기화
+    /// </summary>
+    public void LogoutPlayer()
+    {
+        // 플레이어 정보 초기화
+        PlayerId = string.Empty;
+        PlayerNickname = string.Empty;
+        PlayerMMR = 1000; // 기본값으로 리셋
+    
+        // 저장된 데이터 삭제
+        PlayerPrefs.DeleteKey("PlayerNickname");
+        PlayerPrefs.DeleteKey("PlayerMMR");
+        PlayerPrefs.DeleteKey("SessionToken"); // 세션 토큰 삭제
+    
+        // 추가 데이터 삭제
+        // 필요한 다른 플레이어 관련 PlayerPrefs 키 삭제
+
+        PlayerPrefs.Save();
+    
+        // 인증 서비스 로그아웃 (Unity 서비스를 사용하는 경우)
+        if(AuthenticationService.Instance.IsSignedIn)
+        {
+            try
+            {
+                AuthenticationService.Instance.SignOut();
+                Debug.Log("Authentication Service 로그아웃 완료");
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"로그아웃 중 오류 발생: {e.Message}");
+            }
+        }
+    
+        _isLoggedIn = false;
+        Debug.Log("플레이어 로그아웃 완료");
     }
 
     /// <summary>

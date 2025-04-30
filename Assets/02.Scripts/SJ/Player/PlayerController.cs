@@ -3,6 +3,7 @@ using UnityEngine.AI;
 using Unity.Netcode;
 using System.Collections;
 using System.Collections.Generic;
+using Cinemachine;
 
 public class PlayerController : NetworkBehaviour
 {
@@ -10,6 +11,7 @@ public class PlayerController : NetworkBehaviour
     [SerializeField] private GameObject _cameraPrefab; // 시네머신 카메라 프리팹
     
     private QuadViewCinemachine _cameraController;
+    private Camera _playerCamera;
     
     [Header("이동 설정")]
     [SerializeField] private float _moveSpeed = 5f;
@@ -51,9 +53,16 @@ public class PlayerController : NetworkBehaviour
         public string animationTrigger;
     }
     
+    private void Start()
+    {
+        Debug.Log("PlayerController Start 호출됨");
+    }
+    
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
+        
+        Debug.Log("PlayerController OnNetworkSpawn 호출됨");
         
         // 컴포넌트 참조 가져오기
         _animator = GetComponentInChildren<Animator>();
@@ -72,11 +81,63 @@ public class PlayerController : NetworkBehaviour
         {
             SetupCamera();
             CreateMoveIndicator();
+            
+            // 카메라 설정이 완료될 시간을 주기 위해 지연 후 카메라 참조 찾기
+            //StartCoroutine(FindCameraWithDelay(0.5f));
         }
         
         // 네트워크 변수 콜백
         _isMoving.OnValueChanged += OnMovingChanged;
         _currentSkillIndex.OnValueChanged += OnSkillIndexChanged;
+    }
+    
+    private IEnumerator FindCameraWithDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+    
+        Debug.Log("지연 후 카메라 참조 찾기 시도");
+    
+        // 카메라 컨트롤러에서 카메라 참조 가져오기
+        if (_cameraController != null)
+        {
+            _playerCamera = _cameraController.GetCamera();
+            Debug.Log($"카메라 컨트롤러에서 카메라 참조 얻음: {(_playerCamera != null ? _playerCamera.name : "실패")}");
+        }
+    
+        // 그래도 카메라가 없으면 다른 방법으로 찾기
+        if (_playerCamera == null)
+        {
+            // 브레인이 있는 카메라 찾기
+            CinemachineBrain[] brains = FindObjectsOfType<CinemachineBrain>();
+            Debug.Log($"씬에서 찾은 CinemachineBrain 수: {brains.Length}");
+        
+            foreach (var brain in brains)
+            {
+                if (brain.isActiveAndEnabled && brain.OutputCamera != null)
+                {
+                    _playerCamera = brain.OutputCamera;
+                    Debug.Log($"활성화된 Brain의 카메라 찾음: {_playerCamera.name}");
+                    break;
+                }
+            }
+        }
+    
+        // 여전히 카메라가 없으면 마지막 시도
+        if (_playerCamera == null)
+        {
+            _playerCamera = Camera.main;
+            Debug.Log($"메인 카메라 사용: {(_playerCamera != null ? _playerCamera.name : "메인 카메라 없음")}");
+        }
+    
+        // 최종 결과 확인
+        if (_playerCamera != null)
+        {
+            Debug.Log("카메라 참조 성공!");
+        }
+        else
+        {
+            Debug.LogError("카메라 참조를 찾을 수 없습니다. 마우스 우클릭 이동이 작동하지 않을 수 있습니다.");
+        }
     }
     
     /// <summary>
@@ -160,20 +221,103 @@ public class PlayerController : NetworkBehaviour
     
     private void SetupCamera()
     {
-        // 카메라 프리팹 생성
-        GameObject cameraObj = Instantiate(_cameraPrefab);
+        Debug.Log("SetupCamera 호출됨");
+    
+        try {
+            // 카메라 프리팹 생성
+            GameObject cameraObj = Instantiate(_cameraPrefab);
+            cameraObj.name = "QuadViewCamera";  // 명확한 이름 지정
+            Debug.Log($"카메라 오브젝트 생성됨: {cameraObj.name}");
         
-        // 쿼드뷰 시네머신 컨트롤러 가져오기
-        _cameraController = cameraObj.GetComponent<QuadViewCinemachine>();
+            // 씬에 있는 모든 카메라 컴포넌트 로깅
+            Camera[] allCamerasBeforeSetup = FindObjectsOfType<Camera>();
+            Debug.Log($"카메라 설정 전 씬의 카메라 수: {allCamerasBeforeSetup.Length}");
+            foreach (var cam in allCamerasBeforeSetup)
+            {
+                Debug.Log($"카메라: {cam.name}, 태그: {cam.tag}");
+            }
         
-        // 카메라 타겟 설정
+            // 쿼드뷰 시네머신 컨트롤러 가져오기
+            _cameraController = cameraObj.GetComponent<QuadViewCinemachine>();
+        
+            // 카메라 타겟 설정
+            if (_cameraController != null)
+            {
+                Debug.Log("카메라 컨트롤러 찾음");
+                _cameraController.SetTarget(transform);
+            
+                // 카메라 설정이 완료되고 참조 가져오기
+                StartCoroutine(GetQuadViewCameraWithDelay(0.2f));
+            }
+            else
+            {
+                Debug.LogError("카메라 프리팹에서 QuadViewCinemachine 컴포넌트를 찾을 수 없습니다.");
+            }
+        
+            // 씬 전환 시에도 카메라 유지
+            DontDestroyOnLoad(cameraObj);
+        }
+        catch (System.Exception e) {
+            Debug.LogError($"카메라 설정 중 오류 발생: {e.Message}\n{e.StackTrace}");
+        }
+    }
+    
+    private IEnumerator GetQuadViewCameraWithDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+    
+        Debug.Log("지연 후 카메라 참조 가져오기 시도");
+    
+        // 씬에 있는 모든 카메라 컴포넌트 로깅
+        Camera[] allCamerasAfterSetup = FindObjectsOfType<Camera>();
+        Debug.Log($"카메라 설정 후 씬의 카메라 수: {allCamerasAfterSetup.Length}");
+        foreach (var cam in allCamerasAfterSetup)
+        {
+            Debug.Log($"카메라: {cam.name}, 태그: {cam.tag}");
+        }
+    
+        // 카메라 컨트롤러에서 카메라 참조 가져오기
         if (_cameraController != null)
         {
-            _cameraController.SetTarget(transform);
+            _playerCamera = _cameraController.GetCamera();
+            Debug.Log($"카메라 컨트롤러에서 카메라 참조 얻음: {(_playerCamera != null ? _playerCamera.name : "실패")}");
         }
+    
+        // 최근 생성된 카메라(QuadViewCamera) 찾기
+        if (_playerCamera == null || _playerCamera.name == "Main Camera")
+        {
+            Debug.Log("QuadViewCamera를 직접 찾는 중...");
+            Camera[] cameras = FindObjectsOfType<Camera>();
         
-        // 씬 전환 시에도 카메라 유지
-        DontDestroyOnLoad(cameraObj);
+            // QuadViewCamera 이름을 가진 카메라 찾기
+            foreach (var cam in cameras)
+            {
+                if (cam.name.Contains("QuadView") || cam.name.Contains("Quad") || 
+                    cam.gameObject.name.Contains("Clone"))
+                {
+                    _playerCamera = cam;
+                    Debug.Log($"QuadViewCamera 찾음: {cam.name}");
+                    break;
+                }
+            }
+        
+            // 그래도 못 찾으면 메인 카메라가 아닌 아무 카메라
+            if (_playerCamera == null || _playerCamera.name == "Main Camera")
+            {
+                foreach (var cam in cameras)
+                {
+                    if (cam.name != "Main Camera" && cam.tag != "MainCamera")
+                    {
+                        _playerCamera = cam;
+                        Debug.Log($"메인 카메라가 아닌 카메라 선택: {cam.name}");
+                        break;
+                    }
+                }
+            }
+        }
+    
+        // 최종 결과 로깅
+        Debug.Log($"카메라 참조 결과: {(_playerCamera != null ? _playerCamera.name : "실패")}");
     }
     
     private void CreateMoveIndicator()
@@ -202,38 +346,78 @@ public class PlayerController : NetworkBehaviour
         // 이동 상태 업데이트
         UpdateMovementState();
     }
-    
+
     private void HandleMovementInput()
     {
         // 마우스 우클릭 감지
         if (Input.GetMouseButtonDown(1))
         {
-            // 지형에 레이캐스트하여 이동 위치 결정
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            Debug.Log("우클릭 감지됨");
+
+            // 카메라가 없는 경우 다시 찾기 시도
+            if (_playerCamera == null)
+            {
+                Debug.LogWarning("카메라 참조가 없어 다시 찾는 중...");
+
+                // 씬의 모든 카메라 확인
+                Camera[] allCameras = FindObjectsOfType<Camera>();
+                if (allCameras.Length > 0)
+                {
+                    _playerCamera = allCameras[0];
+                    Debug.Log($"씬에서 카메라 찾음: {_playerCamera.name}");
+                }
+                else
+                {
+                    Debug.LogError("카메라를 찾을 수 없습니다. 이동 불가.");
+                    return;
+                }
+            }
+
+            // 여기서부터는 기존 코드와 동일
+            Ray ray = _playerCamera.ScreenPointToRay(Input.mousePosition);
+            Debug.Log($"레이캐스트 시작: 마우스 위치={Input.mousePosition}");
+
             RaycastHit hit;
-            
             if (Physics.Raycast(ray, out hit, 100f, _groundLayer))
             {
+                Debug.Log($"레이캐스트 히트: 위치={hit.point}, 오브젝트={hit.collider.gameObject.name}");
+
                 // 이동 표시자 표시
                 if (_moveIndicator != null)
                 {
-                    _moveIndicator.transform.position = hit.point + Vector3.up * 0.1f;
+                    _moveIndicator.transform.position = hit.point + Vector3.up * 0.3f;
                     _moveIndicator.SetActive(true);
                     StartCoroutine(HideMoveIndicator(0.5f));
                 }
-                
+
                 // NavMeshAgent로 이동 경로 설정
                 if (_navAgent != null)
                 {
                     _navAgent.SetDestination(hit.point);
-                    
+                    Debug.Log($"네비게이션 목적지 설정: {hit.point}");
+
                     // 서버에 이동 요청
                     SetMoveTargetServerRpc(hit.point);
+                }
+                else
+                {
+                    Debug.LogError("NavMeshAgent가 없습니다.");
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"레이캐스트 실패: 지형을 찾을 수 없습니다. 레이어 마스크: {_groundLayer.value}");
+
+                // 모든 레이어에 대해 레이캐스트 시도 (디버깅용)
+                if (Physics.Raycast(ray, out hit, 100f))
+                {
+                    Debug.Log(
+                        $"모든 레이어 레이캐스트 히트: 레이어={LayerMask.LayerToName(hit.collider.gameObject.layer)}, 이름={hit.collider.gameObject.name}");
                 }
             }
         }
     }
-    
+
     private IEnumerator HideMoveIndicator(float delay)
     {
         yield return new WaitForSeconds(delay);

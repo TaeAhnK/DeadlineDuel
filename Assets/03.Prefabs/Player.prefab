@@ -31,17 +31,17 @@ PrefabInstance:
     - target: {fileID: -8679921383154817045, guid: 07ebbcdb576f8ab46954d575a8b0dc4b,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: 17.083702
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 07ebbcdb576f8ab46954d575a8b0dc4b,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: 0.16666667
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 07ebbcdb576f8ab46954d575a8b0dc4b,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: 23.178322
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 07ebbcdb576f8ab46954d575a8b0dc4b,
         type: 3}
@@ -149,8 +149,9 @@ MonoBehaviour:
   _rotationSpeed: 10
   _groundLayer:
     serializedVersion: 2
-    m_Bits: 0
-  _moveIndicatorPrefab: {fileID: 0}
+    m_Bits: 8
+  _moveIndicatorPrefab: {fileID: 5246542383501486036, guid: 0cffef2ce33d27a4e8f084f439c3d909,
+    type: 3}
   _skills:
   - name: 
     cooldown: 0
