@@ -47,6 +47,8 @@ public class GameMainManager : MonoBehaviour
     [Header("캐릭터 데이터")]
     [SerializeField] private CharacterData[] _characterDataList; // 캐릭터 데이터 배열
     
+     
+    
     // 플레이어 정보
     private string _playerId;
     private string _playerNickname;
@@ -92,9 +94,16 @@ public class GameMainManager : MonoBehaviour
         }
 
         // UI 초기 설정
-        _mainMenuUI.gameObject.SetActive(true);
-        _characterSelectUI.gameObject.SetActive(false);
-        // _matchingStatusText.gameObject.SetActive(false);
+        _mainMenuPanel.SetActive(true);
+        _characterSelectPanel.SetActive(false);
+        
+        // 매칭 상태 텍스트 초기화 - 수정된 부분
+        if (_matchingStatusText != null)
+        {
+            _matchingStatusText.text = "매칭을 시작하려면 캐릭터를 선택하세요";
+            _matchingStatusText.gameObject.SetActive(false);
+        }
+
 
         // 캐릭터 버튼 기본 색상 저장
 
@@ -108,7 +117,18 @@ public class GameMainManager : MonoBehaviour
     {
         // 이전 씬에서 플레이어 정보 가져오기
         GetPlayerInfoFromInitManager();
-                
+        
+        // 이전 세션 데이터가 있다면 정리 (로비에서 돌아온 경우)
+        if (!string.IsNullOrEmpty(PlayerPrefs.GetString("RelayJoinCode", "")) || 
+            !string.IsNullOrEmpty(PlayerPrefs.GetString("CurrentLobbyId", "")))
+        {
+            Debug.Log("이전 세션 데이터 감지, 정리 중...");
+            ClearPreviousSessionData();
+        }
+
+        // UI 이벤트 리스너 등록
+        SetupUIListeners();
+        
         // 캐릭터 데이터 검증
         ValidateCharacterData();
     }
@@ -210,6 +230,53 @@ public class GameMainManager : MonoBehaviour
         // 기본 상태 초기화
         _characterSelectUI.InitState();
     }
+
+    /// <summary>
+    /// "Setting" 버튼 클릭 처리
+    /// </summary>
+    private void OnSettingsClicked()
+    {
+        // 설정 UI 표시 로직 구현
+        Debug.Log("설정 버튼 클릭");
+        // TODO: 설정 패널 표시 (아직 구현 안함)
+    }
+
+    /// <summary>
+    /// "Quit" 버튼 클릭 처리
+    /// </summary>
+    private void OnQuitClicked()
+    {
+        // 이전 세션 데이터 정리
+        ClearPreviousSessionData();
+        
+        // 로그아웃 처리
+        GameInitManager initManager = GameInitManager.GetInstance();
+        if (initManager != null)
+        {
+            initManager.LogoutPlayer();
+        }
+        #if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+        #else
+        Application.Quit();
+        #endif
+    }
+
+    /// <summary>
+    /// 캐릭터 선택 처리
+    /// </summary>
+    private void OnCharacterSelected(int characterIndex)
+    {
+        // 이전 선택 초기화
+        if (_selectedCharacterIndex >= 0 && _selectedCharacterIndex < _characterButtons.Length)
+        {
+            _characterButtons[_selectedCharacterIndex].GetComponent<Image>().color = _defaultCharacterButtonColor;
+        }
+
+        // 새 캐릭터 선택
+        _selectedCharacterIndex = characterIndex;
+        _characterButtons[characterIndex].GetComponent<Image>().color = _selectedCharacterButtonColor;
+	}
         
     // TODO 권태우 : 이거는 사용할지 말지?
     /// <summary>
@@ -278,6 +345,7 @@ public class GameMainManager : MonoBehaviour
         _matchFound = false;
         _hasError = false;
         _errorMessage = "";
+        _matchmakingStartTime = Time.time; // 매칭 시작 시간 저장
         
         // UI 업데이트는 UI_CharacterSelect에서 처리함;
         
@@ -292,12 +360,18 @@ public class GameMainManager : MonoBehaviour
     {
         Debug.Log("매치메이킹 시작");
         
+        // 매칭 시작 시간 설정 - UI에 이미 표시했으므로 여기서도 초기화
+        _matchmakingStartTime = Time.time;
+        
         // 로비 검색 또는 생성
         _lobbyId = null;
         _currentLobby = null;
         
         // 로비 검색/생성 실행 (작업 완료 대기)
         StartCoroutine(FindOrCreateLobbyCoroutine());
+        
+        // 별도의 타이머 코루틴 시작 - 추가된 부분
+        StartCoroutine(UpdateMatchingTimer());
         
         // 로비 작업 완료 대기
         while (_lobbyId == null && !_hasError && _isMatchmaking)
@@ -337,16 +411,6 @@ public class GameMainManager : MonoBehaviour
         // 매칭이 성사될 때까지 대기 (로비 업데이트 코루틴에서 상태 체크)
         while (_isMatchmaking && !_matchFound && !_hasError)
         {
-            // 매칭 시간 업데이트
-            float elapsedTime = Time.time - _matchmakingStartTime;
-            int minutes = Mathf.FloorToInt(elapsedTime / 60f);
-            int seconds = Mathf.FloorToInt(elapsedTime % 60f);
-            
-            // 초가 10초 미만일 때 앞에 0 추가
-            string secondsStr = seconds < 10 ? $"0{seconds}" : seconds.ToString();
-            
-            _matchingStatusText.text = $"매칭 중... {minutes}:{secondsStr}";
-            
             yield return null;
         }
         
@@ -416,6 +480,25 @@ public class GameMainManager : MonoBehaviour
             
             // 다음 씬으로 이동
             SceneManager.LoadScene(_lobbySceneName);
+        }
+    }
+    
+    private IEnumerator UpdateMatchingTimer()
+    {
+        while (_isMatchmaking && !_matchFound && !_hasError)
+        {
+            // 매칭 시간 업데이트
+            float elapsedTime = Time.time - _matchmakingStartTime;
+            int minutes = Mathf.FloorToInt(elapsedTime / 60f);
+            int seconds = Mathf.FloorToInt(elapsedTime % 60f);
+        
+            // 초가 10초 미만일 때 앞에 0 추가
+            string secondsStr = seconds < 10 ? $"0{seconds}" : seconds.ToString();
+        
+            _matchingStatusText.text = $"매칭 중... {minutes}:{secondsStr}";
+        
+            // 0.5초마다 업데이트
+            yield return new WaitForSeconds(0.5f);
         }
     }
     
@@ -1204,5 +1287,23 @@ public class GameMainManager : MonoBehaviour
             string currentState = updatedLobby.Data.TryGetValue("S1", out var stateData) ? stateData.Value : "Unknown";
             Debug.Log($"현재 로비 상태: {currentState}, 호스트 ID: {updatedLobby.HostId}, 내 ID: {AuthenticationService.Instance.PlayerId}");
         }
+    }
+    
+    public static void ClearPreviousSessionData()
+    {
+        // 정적 변수 초기화
+        RelayJoinCode = null;
+    
+        // PlayerPrefs에서 이전 세션 데이터 삭제
+        PlayerPrefs.DeleteKey("RelayJoinCode");
+        PlayerPrefs.DeleteKey("CurrentLobbyId");
+  
+    
+        // 기타 필요한 키 삭제
+        // PlayerPrefs.DeleteKey("IsHost");
+    
+        PlayerPrefs.Save();
+    
+        Debug.Log("이전 세션 데이터가 초기화되었습니다.");
     }
 }

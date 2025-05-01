@@ -128,4 +128,84 @@ public class QuadViewCinemachine : MonoBehaviour
             _cameraTarget.position = playerTransform.position;
         }
     }
+
+    public Camera GetCamera()
+    {
+        Debug.Log("GetCamera 메서드 실행 중...");
+
+        // 1. 가상 카메라와 연결된 실제 카메라 찾기 (GameCamera)
+        if (_virtualCamera != null)
+        {
+            // _virtualCamera 게임 오브젝트의 실제 카메라 찾기 (계층 구조 탐색)
+            Transform cameraParent = _virtualCamera.transform.parent;
+            if (cameraParent != null)
+            {
+                Camera camera = cameraParent.GetComponentInChildren<Camera>();
+                if (camera != null)
+                {
+                    Debug.Log($"QuadViewCamera의 카메라 컴포넌트 찾음: {camera.name}");
+                    return camera;
+                }
+            }
+
+            // 게임 오브젝트 내의 모든 자식 탐색
+            Camera[] childCameras = _virtualCamera.transform.root.GetComponentsInChildren<Camera>();
+            if (childCameras.Length > 0)
+            {
+                Debug.Log($"루트에서 찾은 첫 번째 카메라: {childCameras[0].name}");
+                return childCameras[0];
+            }
+        }
+
+        // 2. 이 스크립트와 같은 게임 오브젝트 내의 카메라 찾기
+        Camera localCamera = GetComponentInChildren<Camera>();
+        if (localCamera != null)
+        {
+            Debug.Log($"이 게임 오브젝트에서 카메라 찾음: {localCamera.name}");
+            return localCamera;
+        }
+
+        // 3. 씬의 모든 카메라 중에서 Main Camera가 아닌 것 찾기
+        Camera[] allCameras = FindObjectsOfType<Camera>();
+        Debug.Log($"씬에서 찾은 카메라 수: {allCameras.Length}");
+
+        foreach (var cam in allCameras)
+        {
+            Debug.Log($"찾은 카메라: {cam.name}, 태그: {cam.tag}");
+
+            // QuadViewCamera 이름을 포함하는 카메라 찾기
+            if (cam.name.Contains("QuadView") || cam.name.Contains("Quad") ||
+                cam.name.Contains("Game") || cam.gameObject.name.Contains("Clone"))
+            {
+                Debug.Log($"QuadViewCamera로 추정되는 카메라 찾음: {cam.name}");
+                return cam;
+            }
+
+            // 메인 카메라가 아닌 첫 번째 카메라
+            if (cam.tag != "MainCamera" && cam.name != "Main Camera")
+            {
+                Debug.Log($"메인 카메라가 아닌 카메라 찾음: {cam.name}");
+                return cam;
+            }
+        }
+
+        // 4. 메인 카메라보다 더 최근에 생성된 카메라 찾기
+        if (allCameras.Length > 1)
+        {
+            // 메인 카메라가 아닌 첫 번째 카메라 반환
+            foreach (var cam in allCameras)
+            {
+                if (cam.name != "Main Camera" && cam.tag != "MainCamera")
+                {
+                    Debug.Log($"메인 카메라가 아닌 카메라 선택: {cam.name}");
+                    return cam;
+                }
+            }
+        }
+
+        // 5. 최후의 수단으로 메인 카메라 사용
+        Debug.LogWarning("QuadViewCamera를 찾지 못해 메인 카메라 사용 중");
+        return Camera.main;
+    }
+
 }

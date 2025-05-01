@@ -5,23 +5,17 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1ef3ec2e-6ecc-4479-badc-e18c7073aaca" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.DeadLineDuel/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.DeadLineDuel/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/01.Scenes/02.GameMain.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/01.Scenes/02.GameMain.unity" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/01.Scenes/03.GameLobby.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/01.Scenes/03.GameLobby.unity" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Manager/GameInitManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Manager/GameInitManager.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Manager/GameLobbyManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Manager/GameLobbyManager.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Manager/GameMainManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Manager/GameMainManager.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Player/PlayerController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Player/PlayerController.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Player/QuadViewController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Player/QuadViewController.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/03.Prefabs/Player.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/03.Prefabs/Player.prefab" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/03.Prefabs/Player.prefab.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/03.Prefabs/Player.prefab.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/DefaultNetworkPrefabs.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/DefaultNetworkPrefabs.asset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/TextMesh Pro/Resources/Fonts &amp; Materials/LiberationSans SDF - Fallback.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/TextMesh Pro/Resources/Fonts &amp; Materials/LiberationSans SDF - Fallback.asset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/manifest.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/packages-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/packages-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ProjectSettings/EditorBuildSettings.asset" beforeDir="false" afterPath="$PROJECT_DIR$/ProjectSettings/EditorBuildSettings.asset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ProjectSettings/NavMeshAreas.asset" beforeDir="false" afterPath="$PROJECT_DIR$/ProjectSettings/NavMeshAreas.asset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ProjectSettings/UnityConnectSettings.asset" beforeDir="false" afterPath="$PROJECT_DIR$/ProjectSettings/UnityConnectSettings.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/03.Prefabs/QuadViewCamera.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/03.Prefabs/QuadViewCamera.prefab" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ProjectSettings/TagManager.asset" beforeDir="false" afterPath="$PROJECT_DIR$/ProjectSettings/TagManager.asset" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -43,7 +37,11 @@
     <setting file="file://$PROJECT_DIR$/Assets/02.Scripts/SJ/Player/QuadViewController.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/02.Scripts/SJ/Skill/SkillEffects.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/02.Scripts/SJ/Skill/SwordCharacterSkillsExtension.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Library/PackageCache/com.unity.netcode.gameobjects@1.12.2/Runtime/Logging/NetworkLog.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Library/PackageCache/com.unity.netcode.gameobjects@1.12.2/Runtime/Messaging/RpcAttributes.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Library/PackageCache/com.unity.netcode.gameobjects@1.12.2/Runtime/NetworkVariable/NetworkVariable.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Library/PackageCache/com.unity.netcode.gameobjects@1.12.2/Runtime/Spawning/NetworkSpawnManager.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Library/PackageCache/com.unity.render-pipelines.high-definition@14.0.11/Runtime/Material/Lit/Lit.shader" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Library/PackageCache/com.unity.services.authentication@3.4.1/Runtime/IAuthenticationService.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Library/PackageCache/com.unity.services.lobby@1.3.0/Runtime/Models/Lobby.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Library/PackageCache/com.unity.services.lobby@1.3.0/Runtime/Models/Player.cs" root0="SKIP_HIGHLIGHTING" />
@@ -85,7 +83,7 @@
 }</component>
   <component name="RunManager" selected="Attach to Unity Editor.Attach to Unity Editor">
     <configuration name="Standalone Player" type="RunUnityExe" factoryName="Unity Executable">
-      <option name="EXE_PATH" value="$PROJECT_DIR$/testClient\DeadLineDuel.exe" />
+      <option name="EXE_PATH" value="$PROJECT_DIR$/testClient/DeadLineDuel.exe" />
       <option name="PROGRAM_PARAMETERS" value="" />
       <option name="WORKING_DIRECTORY" value="D:\Unity_Project_Git\DeadLineDuel\testClient" />
       <option name="PASS_PARENT_ENVS" value="1" />
@@ -146,6 +144,11 @@
       <workItem from="1744943931236" duration="9476000" />
       <workItem from="1745199479154" duration="22861000" />
       <workItem from="1745295769952" duration="995000" />
+      <workItem from="1745381805489" duration="11570000" />
+      <workItem from="1745804440192" duration="4860000" />
+      <workItem from="1745892467075" duration="1798000" />
+      <workItem from="1745904623412" duration="3593000" />
+      <workItem from="1745994128285" duration="3877000" />
     </task>
     <servers />
   </component>

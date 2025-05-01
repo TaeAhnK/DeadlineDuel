@@ -18,12 +18,11 @@ public class GameLobbyManager : NetworkBehaviour
 {
     [Header("씬 설정")]
     [SerializeField] private string _gameplaySceneName = "04.GamePlay";
-    [SerializeField] private float _preparationTime = 60f; // 준비 시간 (초)
+    [SerializeField] private float _preparationTime = 120f; // 준비 시간 (초)
     
     [Header("UI 참조")]
     [SerializeField] private TextMeshProUGUI _countdownText;
     [SerializeField] private TextMeshProUGUI _gameInfoText;
-    [SerializeField] private Button _reconnectButton; // 재연결 버튼 추가
     
     [Header("네트워크 설정")]
     [SerializeField] private GameObject _playerPrefab;
@@ -40,29 +39,40 @@ public class GameLobbyManager : NetworkBehaviour
     private bool _isCountdownActive = false;
     
     // 네트워크 변수
-    private NetworkVariable<float> _networkTime = new NetworkVariable<float>(60f);
+    private NetworkVariable<float> _networkTime = new NetworkVariable<float>(120f);
     private NetworkVariable<bool> _gameStarting = new NetworkVariable<bool>(false);
     
     // 재시도 관련 변수
     private int _connectionAttempts = 0;
-    private const int MAX_CONNECTION_ATTEMPTS = 5;
+    private const int MAX_CONNECTION_ATTEMPTS = 10;
+    
+    [Header("스폰 설정")]
+    [SerializeField] private Transform[] _spawnPointsLocations;
+    [SerializeField] private GameObject _networkStartPositionPrefab;
+    
+    // 사용 가능한 스폰 포인트 추적을 위한 리스트
+    private List<Transform> _availableSpawnPoints = new List<Transform>();
+    // 스폰된 플레이어 추적을 위한 딕셔너리 추가
+    private Dictionary<ulong, GameObject> _spawnedPlayers = new Dictionary<ulong, GameObject>();
+    private bool _initialSpawnCompleted = false; // 초기 스폰이 완료되었는지 추적
     
     private void Start()
     {
         // 이전 씬에서 정보 가져오기
         LoadGameInfo();
         
+        
         // UI 초기화
         _gameInfoText.text = "게임 준비 중...";
         _remainingTime = _preparationTime;
+        if (IsServer)
+        {
+            _networkTime.Value = _preparationTime;
+        }
         UpdateCountdownText();
         
-        // 재연결 버튼 설정 (있는 경우)
-        if (_reconnectButton != null)
-        {
-            _reconnectButton.onClick.AddListener(RetryConnection);
-            _reconnectButton.gameObject.SetActive(false); // 처음에는 숨김
-        }
+        // 스폰 포인트 초기화
+        InitializeSpawnPoints();
         
         // 네트워크 설정
         SetupNetwork();
@@ -72,18 +82,38 @@ public class GameLobbyManager : NetworkBehaviour
     {
         base.OnNetworkSpawn();
         
+        // 네트워크 변수 구독
+        _networkTime.OnValueChanged += OnTimeChanged;
+        _gameStarting.OnValueChanged += OnGameStartingChanged;
+       
         if (IsServer)
         {
             // 서버(호스트)는 카운트다운 시작
             StartCoroutine(ServerCountdown());
+            
+            // 클라이언트 접속 이벤트 리스너 추가
+            NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
+            
+            // 플레이어 스폰 - 서버만 처리
+            SpawnNetworkPlayers();
+            
         }
-        
-        // 네트워크 변수 구독
-        _networkTime.OnValueChanged += OnTimeChanged;
-        _gameStarting.OnValueChanged += OnGameStartingChanged;
-        
-        // 플레이어 스폰
-        SpawnNetworkPlayer();
+    }
+    
+    
+    private void OnClientConnected(ulong clientId)
+    {
+        if (IsServer)
+        {
+            if (NetworkManager.Singleton.ConnectedClientsIds.Count > 1)
+            {
+                _gameInfoText.text = "게임 준비 중...";
+                Debug.Log($"클라이언트 접속 감지: ID {clientId}, 게임 준비 중으로 상태 변경");
+                
+                // 새로 접속한 클라이언트에 대해 플레이어 스폰
+                SpawnPlayerForClient(clientId);
+            }
+        }
     }
     
     private void LoadGameInfo()
@@ -95,6 +125,60 @@ public class GameLobbyManager : NetworkBehaviour
         _isHost = PlayerPrefs.GetInt("IsHost", 0) == 1;
         
         Debug.Log($"로드된 게임 정보 - 로비ID: {_lobbyId}, 캐릭터인덱스: {_selectedCharacterIndex}, 호스트?: {_isHost}");
+    }
+    
+    // 모든 연결된 클라이언트에 대해 플레이어 스폰
+    private void SpawnNetworkPlayers()
+    {
+        if (!IsServer) return;
+        
+        Debug.Log($"플레이어 스폰 시작 - 연결된 클라이언트 수: {NetworkManager.Singleton.ConnectedClientsIds.Count}");
+        
+        // 이미 스폰된 플레이어 초기화
+        _spawnedPlayers.Clear();
+        
+        // 현재 연결된 모든 클라이언트(호스트 포함)에 대해 플레이어 스폰
+        foreach (ulong clientId in NetworkManager.Singleton.ConnectedClientsIds)
+        {
+            SpawnPlayerForClient(clientId);
+        }
+    }
+    
+    // 특정 클라이언트에 대한 플레이어 스폰
+    private void SpawnPlayerForClient(ulong clientId)
+    {
+        if (!IsServer) return;
+        
+        // 이미 스폰되었는지 확인
+        if (_spawnedPlayers.ContainsKey(clientId))
+        {
+            Debug.Log($"클라이언트 {clientId}의 플레이어는 이미 스폰되어 있습니다");
+            return;
+        }
+        
+        // 스폰 위치 선택
+        Transform spawnPoint = GetRandomSpawnPoint();
+        
+        // 플레이어 게임 오브젝트 생성
+        GameObject playerInstance = Instantiate(_playerPrefab, spawnPoint.position, spawnPoint.rotation);
+        
+        // NetworkObject 컴포넌트 가져오기
+        NetworkObject networkObject = playerInstance.GetComponent<NetworkObject>();
+        
+        if (networkObject == null)
+        {
+            Debug.LogError($"플레이어 프리팹에 NetworkObject 컴포넌트가 없습니다!");
+            Destroy(playerInstance);
+            return;
+        }
+        
+        // 네트워크에 스폰하고 소유권 설정
+        networkObject.SpawnAsPlayerObject(clientId);
+        
+        // 스폰된 플레이어 추적
+        _spawnedPlayers.Add(clientId, playerInstance);
+        
+        Debug.Log($"클라이언트 {clientId}의 플레이어가 스폰되었습니다. 위치: {spawnPoint.position}");
     }
     
     private void SetupNetwork()
@@ -153,10 +237,10 @@ public class GameLobbyManager : NetworkBehaviour
                 yield return new WaitForSeconds(1f);
             }
             
-            // 실패한 경우 대기 후 다시 시도
+            // 실패한 경우 지수 백오프로 대기 시간 증가
             if (!connected)
             {
-                float waitTime = Mathf.Min(2f * _connectionAttempts, 5f); // 최대 5초까지 기하급수적 대기
+                float waitTime = Mathf.Min(2f * Mathf.Pow(2, _connectionAttempts - 1), 20f); // 최대 20초까지 기하급수적 증가
                 _gameInfoText.text = $"연결 실패. {waitTime:0.0}초 후 재시도... ({_connectionAttempts}/{MAX_CONNECTION_ATTEMPTS})";
                 yield return new WaitForSeconds(waitTime);
             }
@@ -165,14 +249,77 @@ public class GameLobbyManager : NetworkBehaviour
         // 최대 시도 횟수 초과
         if (!connected)
         {
-            _gameInfoText.text = "서버 연결 실패. 재연결 버튼을 클릭하거나 게임을 다시 시작하세요.";
-            Debug.LogError("최대 연결 시도 횟수 초과");
-            
-            // 재연결 버튼 표시
-            if (_reconnectButton != null)
+            _gameInfoText.text = "서버 연결 실패. 로비를 나가고 메인 화면으로 돌아갑니다...";
+            Debug.LogError("최대 연결 시도 횟수 초과, 메인 씬으로 돌아갑니다");
+        
+            // 잠시 대기하여 사용자가 메시지를 읽을 수 있게 함
+            yield return new WaitForSeconds(3f);
+        
+            // 로비 나가기 처리
+            StartCoroutine(LeaveLobbyAndReturnToMain());
+        }
+    }
+    // 로비 나가기 및 메인 씬으로 돌아가기
+    private IEnumerator LeaveLobbyAndReturnToMain()
+    {
+        // 네트워크 연결 정리
+        if (NetworkManager.Singleton != null)
+        {
+            // 연결되어 있다면 연결 해제
+            if (NetworkManager.Singleton.IsClient || NetworkManager.Singleton.IsServer)
             {
-                _reconnectButton.gameObject.SetActive(true);
+                NetworkManager.Singleton.Shutdown();
+                
+                // 네트워크 종료가 완료될 때까지 짧게 대기
+                yield return new WaitForSeconds(0.5f);
             }
+        }
+    
+        // 로비에서 나가기 (클라이언트만 수행)
+        if (!_isHost && !string.IsNullOrEmpty(_lobbyId))
+        {
+            // 로비 나가기 메서드 호출 (비동기 작업이지만 대기하지 않음)
+            LeaveLobbyAsync(_lobbyId, AuthenticationService.Instance.PlayerId);
+        
+            // 로비 나가기가 완료될 때까지 짧게 기다림 (고정 시간)
+            yield return new WaitForSeconds(1.5f);
+        }
+        
+        // GameMainManager의 정적 변수 초기화
+        GameMainManager.RelayJoinCode = null;
+    
+        // 관련 PlayerPrefs 데이터 정리
+        PlayerPrefs.DeleteKey("RelayJoinCode");
+        PlayerPrefs.DeleteKey("CurrentLobbyId");
+        PlayerPrefs.DeleteKey("IsHost");
+        // 캐릭터 선택 정보는 유지할 수 있음
+        PlayerPrefs.Save();
+        
+        // 메인 씬으로 돌아가기 전에 GameMainManager 찾아서 초기화
+        GameObject mainManagerObj = GameObject.Find("GameMainManager");
+        if (mainManagerObj != null)
+        {
+            Debug.Log("GameMainManager 객체를 찾았습니다. 안전한 전환을 위해 비활성화합니다.");
+            mainManagerObj.SetActive(false);
+        }
+    
+        // GameMain 씬으로 이동
+        SceneManager.LoadScene("02.GameMain"); 
+    }
+    
+    
+    // 로비 나가기를 비동기로 처리하는 별도 메서드 (코루틴 아님)
+    private async void LeaveLobbyAsync(string lobbyId, string playerId)
+    {
+        try
+        {
+            // Unity Lobby Services에서 로비 나가기
+            await Lobbies.Instance.RemovePlayerAsync(lobbyId, playerId);
+            Debug.Log("로비에서 성공적으로 나갔습니다");
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"로비 나가기 오류: {e.Message}");
         }
     }
     
@@ -185,7 +332,7 @@ public class GameLobbyManager : NetworkBehaviour
         if (!string.IsNullOrEmpty(GameMainManager.RelayJoinCode))
         {
             joinCode = GameMainManager.RelayJoinCode;
-            Debug.Log($"GameMainManager에서 조인 코드 찾음: {joinCode}");
+            Debug.Log($"[중요] GameMainManager에서 조인 코드 찾음: {joinCode}");
             return joinCode;
         }
         
@@ -193,11 +340,22 @@ public class GameLobbyManager : NetworkBehaviour
         joinCode = PlayerPrefs.GetString("RelayJoinCode", "");
         if (!string.IsNullOrEmpty(joinCode))
         {
-            Debug.Log($"PlayerPrefs에서 조인 코드 찾음: {joinCode}");
+            Debug.Log($"[중요] PlayerPrefs에서 조인 코드 찾음: {joinCode}");
+        
+            // 정적 변수가 비어있으면 이 값으로 업데이트
+            if (string.IsNullOrEmpty(GameMainManager.RelayJoinCode))
+            {
+                GameMainManager.RelayJoinCode = joinCode;
+            }
+        
             return joinCode;
         }
         
-        // 3. 로비 데이터에서 읽어오는 것은 별도 코루틴에서 수행
+        // 3. 로비에서 직접 가져온 코드가 있으면 모든 위치에 동기화
+        if (string.IsNullOrEmpty(joinCode))
+        {
+            Debug.Log("[중요] 모든 소스에서 조인코드를 찾지 못했습니다.");
+        }
         return null;
     }
     
@@ -229,7 +387,7 @@ public class GameLobbyManager : NetworkBehaviour
         float startTime = Time.time;
         while (!getLobbyTask.IsCompleted)
         {
-            if (Time.time - startTime > 5f)
+            if (Time.time - startTime > 10f)
             {
                 Debug.LogWarning("로비 정보 요청 타임아웃");
                 yield break;
@@ -280,29 +438,29 @@ public class GameLobbyManager : NetworkBehaviour
         }
     }
     
-    // 연결 재시도 버튼 클릭 처리
-    private void RetryConnection()
-    {
-        if (_reconnectButton != null)
-        {
-            _reconnectButton.gameObject.SetActive(false);
-        }
-        
-        // 연결 재시도
-        StartCoroutine(ClientConnectWithRetry());
-    }
+   
     
     // Relay 서버 설정 (호스트용)
     private IEnumerator SetupRelayServer()
     {
         _gameInfoText.text = "서버 설정 중...";
-        
+
+        // 이전에 저장된 조인 코드 확인 (재사용 안함, 항상 새로 생성)
+        if (!string.IsNullOrEmpty(GameMainManager.RelayJoinCode) ||
+            !string.IsNullOrEmpty(PlayerPrefs.GetString("RelayJoinCode", "")))
+        {
+            Debug.Log("경고: 이전 세션의 조인 코드가 감지되었습니다. 새 코드를 생성합니다.");
+            GameMainManager.RelayJoinCode = null;
+            PlayerPrefs.DeleteKey("RelayJoinCode");
+            PlayerPrefs.Save();
+        }
+
         // Relay 할당 생성
         Task<Allocation> allocationTask = RelayService.Instance.CreateAllocationAsync(8);
-        
+
         // Task 완료 대기
         yield return new WaitUntil(() => allocationTask.IsCompleted);
-        
+
         // 오류 확인
         if (allocationTask.IsFaulted)
         {
@@ -310,34 +468,14 @@ public class GameLobbyManager : NetworkBehaviour
             _gameInfoText.text = $"서버 설정 오류: {allocationTask.Exception?.InnerException?.Message}";
             yield break;
         }
-        
+
         // 할당 결과 가져오기
         Allocation allocation = allocationTask.Result;
         
-        // 조인 코드 가져오기
-        Task<string> joinCodeTask = RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
-        yield return new WaitUntil(() => joinCodeTask.IsCompleted);
-        
-        if (joinCodeTask.IsFaulted)
-        {
-            Debug.LogError($"조인 코드 가져오기 오류: {joinCodeTask.Exception?.InnerException?.Message}");
-            _gameInfoText.text = $"서버 설정 오류: {joinCodeTask.Exception?.InnerException?.Message}";
-            yield break;
-        }
-        
-        string joinCode = joinCodeTask.Result;
-        Debug.Log($"Relay 조인 코드 생성 성공: {joinCode} (길이: {joinCode.Length})");
-        
-        // 연결 코드 저장 - 여러 곳에 중복 저장하여 안정성 확보
-        PlayerPrefs.SetString("RelayJoinCode", joinCode);
-        PlayerPrefs.Save();
-        
-        // GameMainManager의 정적 변수에도 저장
-        GameMainManager.RelayJoinCode = joinCode;
-        
-        // 로비에 연결 코드 업데이트
-        StartCoroutine(UpdateLobbyWithRelayCode(joinCode));
-        
+        // 호스트 시작 직전 로그
+        Debug.Log("Relay 호스트 설정 완료, 네트워크 시작 직전");
+
+        // 중요: 조인 코드를 가져오기 전에 먼저 Netcode transport 설정 및 호스트 시작
         try
         {
             // Netcode transport 설정
@@ -348,17 +486,49 @@ public class GameLobbyManager : NetworkBehaviour
                 allocation.Key,
                 allocation.ConnectionData
             );
-            
-            // 호스트 시작
+
+            // 호스트 즉시 시작 (중요! - 조인 코드 생성 전에 해야 함)
             NetworkManager.Singleton.StartHost();
             _isNetworkActive = true;
-            _gameInfoText.text = "다른 플레이어 연결 대기 중...";
+            _gameInfoText.text = "서버 설정 완료, 연결 정보 생성 중...";
+
+            Debug.Log("Relay 호스트 설정 완료 및 네트워크 시작");
         }
         catch (Exception e)
         {
             Debug.LogError($"Relay 서버 설정 오류: {e.Message}");
             _gameInfoText.text = $"서버 설정 오류: {e.Message}";
+            yield break;
         }
+
+        // 호스트 시작 후 조인 코드 가져오기
+        Task<string> joinCodeTask = RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
+        yield return new WaitUntil(() => joinCodeTask.IsCompleted);
+        
+        // 호스트 시작 직후 로그
+        Debug.Log("네트워크 시작 직후 상태");
+
+        if (joinCodeTask.IsFaulted)
+        {
+            Debug.LogError($"조인 코드 가져오기 오류: {joinCodeTask.Exception?.InnerException?.Message}");
+            _gameInfoText.text = $"서버 설정 오류: {joinCodeTask.Exception?.InnerException?.Message}";
+            yield break;
+        }
+
+        string joinCode = joinCodeTask.Result;
+        Debug.Log($"Relay 조인 코드 생성 성공: {joinCode} (길이: {joinCode.Length})");
+
+        // 연결 코드 저장 - 여러 곳에 중복 저장하여 안정성 확보
+        PlayerPrefs.SetString("RelayJoinCode", joinCode);
+        PlayerPrefs.Save();
+
+        // GameMainManager의 정적 변수에도 저장
+        GameMainManager.RelayJoinCode = joinCode;
+
+        // 로비에 연결 코드 업데이트
+        StartCoroutine(UpdateLobbyWithRelayCode(joinCode));
+
+        _gameInfoText.text = "다른 플레이어 연결 대기 중...";
     }
 
     /// <summary>
@@ -375,7 +545,7 @@ public class GameLobbyManager : NetworkBehaviour
         Debug.Log($"로비 {_lobbyId}에 Relay 코드 업데이트 중: {joinCode} (길이: {joinCode.Length})");
 
         // 로비 업데이트 최대 3회 시도
-        for (int retry = 0; retry < 3; retry++)
+        for (int retry = 0; retry < 5; retry++)
         {
             Task updateLobbyTask = null;
             bool taskStarted = false;
@@ -396,14 +566,14 @@ public class GameLobbyManager : NetworkBehaviour
             }
             catch (Exception e)
             {
-                Debug.LogError($"로비 업데이트 호출 오류 (시도 {retry + 1}/3): {e.Message}");
+                Debug.LogError($"로비 업데이트 호출 오류 (시도 {retry + 1}/5): {e.Message}");
                 taskStarted = false;
             }
 
             // 작업 시작 실패시 대기 후 다음 시도
             if (!taskStarted)
             {
-                yield return new WaitForSeconds(1f);
+                yield return new WaitForSeconds(1f * (retry + 1));
                 continue;
             }
 
@@ -413,7 +583,7 @@ public class GameLobbyManager : NetworkBehaviour
             if (updateLobbyTask.IsFaulted)
             {
                 Debug.LogError(
-                    $"로비 업데이트 오류 (시도 {retry + 1}/3): {updateLobbyTask.Exception?.InnerException?.Message}");
+                    $"로비 업데이트 오류 (시도 {retry + 1}/5): {updateLobbyTask.Exception?.InnerException?.Message}");
                 yield return new WaitForSeconds(1f);
                 continue;
             }
@@ -587,51 +757,61 @@ public class GameLobbyManager : NetworkBehaviour
         _countdownText.text = $"남은 시간: {minutes:00}:{seconds:00}";
     }
     
-    // 플레이어 스폰
-    private void SpawnNetworkPlayer()
+    // Start나 OnNetworkSpawn에서 스폰 포인트 초기화
+    private void InitializeSpawnPoints()
     {
-        if (!IsServer)
-            return;
-            
-        // 각 클라이언트에 대해 플레이어 스폰
-        foreach (ulong clientId in NetworkManager.Singleton.ConnectedClientsIds)
+        // 모든 스폰 포인트를 사용 가능한 리스트에 추가
+        _availableSpawnPoints.Clear();
+        foreach (Transform spawnPoint in _spawnPoints)
         {
-            // 랜덤 스폰 포인트 선택
-            Transform spawnPoint = GetRandomSpawnPoint();
-            
-            // 플레이어 생성
-            GameObject playerInstance = Instantiate(_playerPrefab, spawnPoint.position, spawnPoint.rotation);
-            NetworkObject networkObject = playerInstance.GetComponent<NetworkObject>();
-            
-            // 네트워크 오브젝트 스폰
-            networkObject.SpawnAsPlayerObject(clientId);
-            
-            // 필요시 캐릭터 커스터마이즈 (별도 메서드 필요)
-            CustomizePlayer(playerInstance, clientId);
+            _availableSpawnPoints.Add(spawnPoint);
         }
+    
+        Debug.Log($"스폰 포인트 {_availableSpawnPoints.Count}개 초기화됨");
     }
     
     // 랜덤 스폰 포인트 선택
     private Transform GetRandomSpawnPoint()
     {
-        if (_spawnPoints.Length == 0)
+        // 스폰 포인트가 없는 경우 자신의 위치 반환
+        if (_availableSpawnPoints.Count == 0)
+        {
+            Debug.LogWarning("사용 가능한 스폰 포인트가 없습니다. 기본 위치 사용.");
             return transform;
-            
-        return _spawnPoints[UnityEngine.Random.Range(0, _spawnPoints.Length)];
+        }
+    
+        // 남은 스폰 포인트 중에서 랜덤으로 선택
+        int randomIndex = UnityEngine.Random.Range(0, _availableSpawnPoints.Count);
+        Transform selectedSpawnPoint = _availableSpawnPoints[randomIndex];
+    
+        // 사용한 스폰 포인트를 리스트에서 제거
+        _availableSpawnPoints.RemoveAt(randomIndex);
+    
+        Debug.Log($"스폰 포인트 선택됨: {selectedSpawnPoint.name}, 남은 스폰 포인트: {_availableSpawnPoints.Count}");
+    
+        return selectedSpawnPoint;
     }
     
-    // 플레이어 캐릭터 커스터마이징
-    private void CustomizePlayer(GameObject playerObject, ulong clientId)
+    private void OnDestroy()
     {
-        // 각 클라이언트의 캐릭터 인덱스 가져오기
-        // (실제 구현에서는 클라이언트 ID와 캐릭터 인덱스 맵핑이 필요)
-        int characterIndex = _selectedCharacterIndex;
-        
-        // 플레이어 커스터마이즈 컴포넌트 찾기
-        PlayerCustomizer customizer = playerObject.GetComponent<PlayerCustomizer>();
-        if (customizer != null)
+        // 등록된 이벤트 리스너 제거
+        if (NetworkManager.Singleton != null && IsServer)
         {
-            customizer.SetCharacterModel(characterIndex);
+            NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
         }
+    
+        // 네트워크 변수 구독 해제
+        if (_networkTime != null)
+        {
+            _networkTime.OnValueChanged -= OnTimeChanged;
+        }
+    
+        if (_gameStarting != null)
+        {
+            _gameStarting.OnValueChanged -= OnGameStartingChanged;
+        }
+        
+        // 스폰된 플레이어 추적 데이터 정리
+        _spawnedPlayers.Clear();
     }
 }
