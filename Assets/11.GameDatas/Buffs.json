@@ -1,0 +1,120 @@
+{
+  "playerBuffs": [
+    {
+      "name": "Attack +10",
+      "cost": 5,
+      "target": "Player",
+      "type": "Attack",
+      "value": 15
+    },
+    {
+      "name": "Defense +20",
+      "cost": 5,
+      "target": "Player",
+      "type": "Defense",
+      "value": 20
+    },
+    {
+      "name": "AttackSpeed +50",
+      "cost": 10,
+      "target": "Player",
+      "type": "AttackSpeed",
+      "value": 50
+    },
+    {
+      "name": "Test",
+      "cost": 100,
+      "target": "Player",
+      "type": "Attack",
+      "value": 50
+    },
+    {
+      "name": "Test",
+      "cost": 100,
+      "target": "Player",
+      "type": "Attack",
+      "value": 50
+    },
+    {
+      "name": "Test",
+      "cost": 100,
+      "target": "Player",
+      "type": "Attack",
+      "value": 50
+    },
+    {
+      "name": "Test",
+      "cost": 100,
+      "target": "Player",
+      "type": "Attack",
+      "value": 50
+    },
+    {
+      "name": "Test",
+      "cost": 100,
+      "target": "Player",
+      "type": "Attack",
+      "value": 50
+    },
+    {
+      "name": "Test",
+      "cost": 100,
+      "target": "Player",
+      "type": "Attack",
+      "value": 50
+    },
+    {
+      "name": "Test",
+      "cost": 100,
+      "target": "Player",
+      "type": "Attack",
+      "value": 50
+    }
+  ],
+  "enemyBuffs": [
+    {
+      "name": "Attack -10",
+      "cost": 5,
+      "target": "Enemy",
+      "type": "Attack",
+      "value": -15
+    },
+    {
+      "name": "Defense -20",
+      "cost": 5,
+      "target": "Enemy",
+      "type": "Defense",
+      "value": -20
+    },
+    {
+      "name": "AttackSpeed -50",
+      "cost": 10,
+      "target": "Enemy",
+      "type": "AttackSpeed",
+      "value": 50
+    }
+  ],
+  "bossBuffs": [
+    {
+      "name": "Attack -10",
+      "cost": 5,
+      "target": "Enemy",
+      "type": "Attack",
+      "value": -15
+    },
+    {
+      "name": "Defense -20",
+      "cost": 5,
+      "target": "Enemy",
+      "type": "Defense",
+      "value": -20
+    },
+    {
+      "name": "AttackSpeed -50",
+      "cost": 10,
+      "target": "Enemy",
+      "type": "AttackSpeed",
+      "value": 50
+    }
+  ]
+}
