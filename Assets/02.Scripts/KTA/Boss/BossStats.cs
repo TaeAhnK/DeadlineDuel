@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Stats.Boss
 {
-    public class BossStats : NetworkBehaviour, IDamageable
+    public class BossStats : NetworkBehaviour, IDamageable // Currently Does Nothing
     {
         [SerializeField] private BossInitStatData initStatData;
 

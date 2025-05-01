@@ -32,18 +32,21 @@ namespace Boss
         
         protected void TurnToPlayer()
         {
-            if (StateMachine.Player)
+            if (StateMachine.BossCharacter.GetTargetPlayer(out Transform targetPlayer))
             {
-                Turn(StateMachine.Player.transform.position - StateMachine.transform.position);                
+                Turn(targetPlayer.position - StateMachine.transform.position);                
             }
         }
         
         protected bool IsPlayerInRange()
         {
-            if (!StateMachine.Player) return false;
-            float distSqr = (StateMachine.Player.transform.position - StateMachine.transform.position).sqrMagnitude;
-            
-            return distSqr <= StateMachine.PlayerDetectRange * StateMachine.PlayerDetectRange;
+            if (StateMachine.BossCharacter.GetTargetPlayer(out Transform targetPlayer))
+            {
+                float distSqr = (targetPlayer.position - StateMachine.gameObject.transform.position).sqrMagnitude;
+                return distSqr <= StateMachine.PlayerDetectRange * StateMachine.PlayerDetectRange;
+            }
+
+            return false;
         }
         
         protected void SetAnimatorFloat(int hash, float value, float animationDampTime, float deltaTime)
@@ -52,7 +55,7 @@ namespace Boss
 
             if (Math.Abs(StateMachine.NetworkAnimator.Animator.GetFloat(hash) - value) > 0.1f)
             {
-                StateMachine.NetworkAnimator.Animator.SetFloat(hash, value,  animationDampTime, deltaTime);    
+                StateMachine.NetworkAnimator.Animator.SetFloat(hash, value, animationDampTime, deltaTime);    
             }
         }
 

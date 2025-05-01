@@ -14,11 +14,10 @@ namespace Boss.Skills
         {
             this.BossPos = BossPos;
             this.TargetPos = TargetPos;
-            PlayIndicatorClientRpc(BossPos, TargetPos);
+            PlayIndicatorClient(BossPos, TargetPos);
         }
-
-        [ClientRpc]
-        public override void PlayIndicatorClientRpc(Vector3 BossPos, Vector3 TargetPos)
+        
+        public override void PlayIndicatorClient(Vector3 BossPos, Vector3 TargetPos)
         {
             this.BossPos = BossPos;
             this.TargetPos = TargetPos;
@@ -30,30 +29,30 @@ namespace Boss.Skills
         public override void PlayColliderServerRpc()
         {
             int layerMask = LayerMask.GetMask("Player");
-            var size = Physics.OverlapSphereNonAlloc(BossPos, radius, Colliders);
+            var size = Physics.OverlapSphereNonAlloc(BossPos, radius, Colliders, layerMask);
             
             Vector3 forward = transform.forward;
             
             if (size > 0)
             {
-                foreach (var col in Colliders)
+                for  (int i = 0; i < size; i++)
                 {
-                    Vector3 dir = (col.transform.position - BossPos).normalized;
+                    Vector3 dir = (Colliders[i].transform.position - BossPos).normalized;
                     float angle = Vector3.Angle(forward, dir);
                     if (angle <= 90f) // 180도(반원) 이내
                     {
-                        if (col.TryGetComponent<IDamageable>(out var damageable))
+                        Debug.Log("[Boss] Hit Object : " + Colliders[i].gameObject.name);
+                        if (Colliders[i].TryGetComponent<IDamageable>(out var damageable))
                         {
                             damageable.TakeDamageServerRpc(10);
-                            PlayHitEffectClientRpc(col.bounds.center);
+                            PlayHitEffectClientRpc(Colliders[i].bounds.center);
                         }
                     }
                 }   
             }
         }
-
-        [ClientRpc]
-        public override void PlayEffectClientRpc()
+        
+        public override void PlayEffectClient()
         {
             skillEffectParticle.Play();
         }

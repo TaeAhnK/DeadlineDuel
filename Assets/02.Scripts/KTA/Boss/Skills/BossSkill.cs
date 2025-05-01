@@ -19,8 +19,8 @@ namespace Boss.Skills
 
         [ServerRpc] public virtual void PlayIndicatorServerRpc(Vector3 BossPos, Vector3 TargetPos) { }
 
-        [ClientRpc] public virtual void PlayIndicatorClientRpc(Vector3 BossPos, Vector3 TargetPos) {}
+        public virtual void PlayIndicatorClient(Vector3 BossPos, Vector3 TargetPos) {}
         [ServerRpc] public virtual void PlayColliderServerRpc() {}
-        [ClientRpc] public virtual void PlayEffectClientRpc() {}
+        public virtual void PlayEffectClient() {}
     }
 }

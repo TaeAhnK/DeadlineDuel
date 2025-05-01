@@ -14,11 +14,10 @@ namespace Boss.Skills
         {
             this.BossPos = BossPos;
             this.TargetPos = TargetPos;
-            PlayIndicatorClientRpc(BossPos, TargetPos);
+            PlayIndicatorClient(BossPos, TargetPos);
         }
-
-        [ClientRpc]
-        public override void PlayIndicatorClientRpc(Vector3 BossPos, Vector3 TargetPos)
+        
+        public override void PlayIndicatorClient(Vector3 BossPos, Vector3 TargetPos)
         {
             this.BossPos = BossPos;
             this.TargetPos = TargetPos;
@@ -48,9 +47,8 @@ namespace Boss.Skills
                 }   
             }
         }
-
-        [ClientRpc]
-        public override void PlayEffectClientRpc()
+        
+        public override void PlayEffectClient()
         {
             skillEffectParticle.Play();
         }
