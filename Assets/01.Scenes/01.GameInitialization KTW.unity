@@ -1919,7 +1919,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2bc61aefa390f02459ecfacec403aad1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _mainMenuSceneName: 02.GameMain
+  _mainMenuSceneName: 02.GameMain KTW
   _minLoadingTime: 1.5
   _splashScreen: {fileID: 1609554574}
   _loadingPanel: {fileID: 260292248}
