@@ -6,7 +6,6 @@ public class CharacterData
     public string name;               // 캐릭터 이름
     public GameObject characterPrefab; // 캐릭터 프리팹
     public Sprite portraitImage;      // 캐릭터 초상화/아이콘
-    public Color themeColor;          // 캐릭터 테마 색상
     
     [Header("스킬 정보")]
     public SkillData[] skills = new SkillData[4]; // Q, W, E, R 스킬
