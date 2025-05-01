@@ -22,7 +22,6 @@ public class GameMainManager : MonoBehaviour
     
     // Relay 조인 코드 직접 전달을 위한 정적 변수
     public static string RelayJoinCode;
-    public static bool IsDebugging = true; // 디버깅 모드 활성화 여부
 
     [Header("씬 설정")]
     [SerializeField] private string _lobbySceneName = "03.GameLobby";
@@ -31,23 +30,9 @@ public class GameMainManager : MonoBehaviour
     [SerializeField] private UI_MainMenu _mainMenuUI;
     [SerializeField] private UI_CharacterSelect _characterSelectUI;
     
-    [Header("매칭 상태 UI")] //태우님 UI가져오면 수정해야할 부분
-    [SerializeField] private TextMeshProUGUI _matchingStatusText;
-    [SerializeField] private Button _startMatchmakingButton; // 시작/취소 버튼으로 겸용
-    [SerializeField] private TextMeshProUGUI _startMatchmakingButtonText; // 버튼 텍스트 내용
-
-
-    [Header("캐릭터 선택 UI")] // 태우님 UI가져오면 수정해야할 부분
-    [SerializeField] private Button[] _characterButtons; // 캐릭터 선택 버튼 배열
-    [SerializeField] private Button _backToMainButton; // 메인으로 돌아가는 버튼 (선택적)
-    [SerializeField] private TextMeshProUGUI _characterNameText; // 캐릭터 이름 텍스트
-    [SerializeField] private TextMeshProUGUI _characterDescriptionText; // 캐릭터 설명 텍스트
-    [SerializeField] private Image _selectedCharacterImage; // 선택된 캐릭터 이미지
-    
     [Header("캐릭터 데이터")]
     [SerializeField] private CharacterData[] _characterDataList; // 캐릭터 데이터 배열
     
-     
     
     // 플레이어 정보
     private string _playerId;
@@ -56,8 +41,6 @@ public class GameMainManager : MonoBehaviour
 
     // 캐릭터 선택 정보
     private int _selectedCharacterIndex = -1; // 선택된 캐릭터 인덱스
-    private Color _defaultCharacterButtonColor; // 기본 버튼 색상
-    private Color _selectedCharacterButtonColor = new Color(0.8f, 0.8f, 1f); // 선택 시 색상
 
     // 매치메이킹 정보
     private Coroutine _matchmakingCoroutine;
@@ -94,23 +77,8 @@ public class GameMainManager : MonoBehaviour
         }
 
         // UI 초기 설정
-        _mainMenuPanel.SetActive(true);
-        _characterSelectPanel.SetActive(false);
-        
-        // 매칭 상태 텍스트 초기화 - 수정된 부분
-        if (_matchingStatusText != null)
-        {
-            _matchingStatusText.text = "매칭을 시작하려면 캐릭터를 선택하세요";
-            _matchingStatusText.gameObject.SetActive(false);
-        }
-
-
-        // 캐릭터 버튼 기본 색상 저장
-
-        if (_characterButtons.Length > 0)
-        {
-            _defaultCharacterButtonColor = _characterButtons[0].GetComponent<Image>().color;
-        }
+        _mainMenuUI.gameObject.SetActive(true);
+        _characterSelectUI.gameObject.SetActive(false);
     }
 
     private void Start()
@@ -125,10 +93,6 @@ public class GameMainManager : MonoBehaviour
             Debug.Log("이전 세션 데이터 감지, 정리 중...");
             ClearPreviousSessionData();
         }
-
-        // UI 이벤트 리스너 등록
-        SetupUIListeners();
-        
         // 캐릭터 데이터 검증
         ValidateCharacterData();
     }
@@ -145,9 +109,9 @@ public class GameMainManager : MonoBehaviour
         }
 
         // 캐릭터 버튼 수와 캐릭터 데이터 수 비교
-        if (_characterButtons.Length != _characterDataList.Length)
+        if (_characterSelectUI.GetSelectedCharacter().Equals(_characterDataList.Length))
         {
-            Debug.LogWarning($"캐릭터 버튼 수({_characterButtons.Length})와 캐릭터 데이터 수({_characterDataList.Length})가 일치하지 않습니다!");
+            Debug.LogWarning($"캐릭터 버튼 수({_characterSelectUI.GetSelectedCharacter().ToString()})와 캐릭터 데이터 수({_characterDataList.Length})가 일치하지 않습니다!");
         }
 
         // 프리팹 연결 확인
@@ -230,96 +194,7 @@ public class GameMainManager : MonoBehaviour
         // 기본 상태 초기화
         _characterSelectUI.InitState();
     }
-
-    /// <summary>
-    /// "Setting" 버튼 클릭 처리
-    /// </summary>
-    private void OnSettingsClicked()
-    {
-        // 설정 UI 표시 로직 구현
-        Debug.Log("설정 버튼 클릭");
-        // TODO: 설정 패널 표시 (아직 구현 안함)
-    }
-
-    /// <summary>
-    /// "Quit" 버튼 클릭 처리
-    /// </summary>
-    private void OnQuitClicked()
-    {
-        // 이전 세션 데이터 정리
-        ClearPreviousSessionData();
-        
-        // 로그아웃 처리
-        GameInitManager initManager = GameInitManager.GetInstance();
-        if (initManager != null)
-        {
-            initManager.LogoutPlayer();
-        }
-        #if UNITY_EDITOR
-        UnityEditor.EditorApplication.isPlaying = false;
-        #else
-        Application.Quit();
-        #endif
-    }
-
-    /// <summary>
-    /// 캐릭터 선택 처리
-    /// </summary>
-    private void OnCharacterSelected(int characterIndex)
-    {
-        // 이전 선택 초기화
-        if (_selectedCharacterIndex >= 0 && _selectedCharacterIndex < _characterButtons.Length)
-        {
-            _characterButtons[_selectedCharacterIndex].GetComponent<Image>().color = _defaultCharacterButtonColor;
-        }
-
-        // 새 캐릭터 선택
-        _selectedCharacterIndex = characterIndex;
-        _characterButtons[characterIndex].GetComponent<Image>().color = _selectedCharacterButtonColor;
-	}
-        
-    // TODO 권태우 : 이거는 사용할지 말지?
-    /// <summary>
-    /// 캐릭터 정보 UI 업데이트 -> 캐릭터의 정보를 가져와서 넣는부분(캐릭터설명 or 특징들)
-    /// </summary>
-    private void UpdateCharacterInfoUI(int characterIndex)
-    {
-        if (characterIndex >= 0 && characterIndex < _characterDataList.Length)
-        {
-            // 캐릭터 이름 설정
-            if (_characterNameText != null)
-            {
-                _characterNameText.text = _characterDataList[characterIndex].name;
-                _characterNameText.color = _characterDataList[characterIndex].themeColor;
-            }
-
-            // 캐릭터 설명 설정 (필요시 추가)
-            if (_characterDescriptionText != null)
-            {
-                _characterDescriptionText.text = "캐릭터 설명이 여기에 들어갑니다...";
-            }
-
-            // 캐릭터 이미지 설정
-            if (_selectedCharacterImage != null && _characterDataList[characterIndex].portraitImage != null)
-            {
-                _selectedCharacterImage.sprite = _characterDataList[characterIndex].portraitImage;
-                _selectedCharacterImage.gameObject.SetActive(true);
-            }
-        }
-        else
-        {
-            // 선택이 없는 경우 정보 초기화
-            if (_characterNameText != null)
-                _characterNameText.text = "캐릭터를 선택하세요";
-            
-            if (_characterDescriptionText != null)
-                _characterDescriptionText.text = "";
-            
-            if (_selectedCharacterImage != null)
-                _selectedCharacterImage.gameObject.SetActive(false);
-        }
-    }
-
+    
     public void SetSelectCharacterIndex(int index) {
         _selectedCharacterIndex = index;
     }
@@ -383,7 +258,7 @@ public class GameMainManager : MonoBehaviour
         if (_hasError)
         {
             Debug.LogError("로비 검색/생성 오류: " + _errorMessage);
-            _matchingStatusText.text = "매칭 오류: " + _errorMessage;
+            _characterSelectUI.MatchingText.text = "Matching Error: " + _errorMessage;
             
             // 3초 후 캐릭터 선택 화면으로 돌아가기
             yield return new WaitForSeconds(3f);
@@ -418,7 +293,7 @@ public class GameMainManager : MonoBehaviour
         if (_hasError)
         {
             Debug.LogError("매칭 진행 중 오류: " + _errorMessage);
-            _matchingStatusText.text = "매칭 오류: " + _errorMessage;
+            _characterSelectUI.MatchingText.text = "Matching Error: " + _errorMessage;
             
             // 3초 후 캐릭터 선택 화면으로 돌아가기
             yield return new WaitForSeconds(3f);
@@ -436,7 +311,7 @@ public class GameMainManager : MonoBehaviour
         // 매칭 성사
         if (_matchFound)
         {
-            _matchingStatusText.text = "매치 찾음! 게임 준비 중...";
+            _characterSelectUI.MatchingText.text = "Find Match! Getting ready for the game...";
             
             // RelayJoinCode를 여러 곳에서 확인하고 저장하는 로직
             string relayJoinCode = null;
@@ -487,15 +362,29 @@ public class GameMainManager : MonoBehaviour
     {
         while (_isMatchmaking && !_matchFound && !_hasError)
         {
-            // 매칭 시간 업데이트
-            float elapsedTime = Time.time - _matchmakingStartTime;
-            int minutes = Mathf.FloorToInt(elapsedTime / 60f);
-            int seconds = Mathf.FloorToInt(elapsedTime % 60f);
+            // UI 참조가 유효한지 확인
+            if (_characterSelectUI != null && _characterSelectUI.MatchingText != null)
+            {
+                // 매칭 시간 업데이트
+                float elapsedTime = Time.time - _matchmakingStartTime;
+                int minutes = Mathf.FloorToInt(elapsedTime / 60f);
+                int seconds = Mathf.FloorToInt(elapsedTime % 60f);
         
-            // 초가 10초 미만일 때 앞에 0 추가
-            string secondsStr = seconds < 10 ? $"0{seconds}" : seconds.ToString();
+                // 초가 10초 미만일 때 앞에 0 추가
+                string secondsStr = seconds < 10 ? $"0{seconds}" : seconds.ToString();
         
-            _matchingStatusText.text = $"매칭 중... {minutes}:{secondsStr}";
+                _characterSelectUI.MatchingText.text = $"Matching... {minutes}:{secondsStr}";
+            }
+            else
+            {
+                Debug.LogWarning("캐릭터 선택 UI 또는 MatchingText가 null입니다");
+                
+                Debug.Log($"_characterSelectUI가 null인가: {_characterSelectUI == null}");
+                if (_characterSelectUI != null)
+                {
+                    Debug.Log($"MatchingText가 null인가: {_characterSelectUI.MatchingText == null}");
+                }
+            }
         
             // 0.5초마다 업데이트
             yield return new WaitForSeconds(0.5f);
@@ -688,7 +577,7 @@ public class GameMainManager : MonoBehaviour
         else
         {
             _hasError = true;
-            _errorMessage = "적합한 로비를 찾거나 생성할 수 없습니다.";
+            _errorMessage = "Cannot find or create a suitable lobby.";
         }
     }
     
@@ -1151,9 +1040,7 @@ public class GameMainManager : MonoBehaviour
                 {
                     _isMatchmaking = false;
                     _hasError = true;
-                    _errorMessage = "로비가 종료되었습니다.";
-                    _matchingStatusText.text = "로비가 종료되었습니다.";
-                    
+                    _errorMessage = "The lobby is closed.";
                 }
             }
         }
@@ -1235,8 +1122,7 @@ public class GameMainManager : MonoBehaviour
                 {
                     _isMatchmaking = false;
                     _hasError = true;
-                    _errorMessage = "로비가 종료되었습니다.";
-                    _matchingStatusText.text = "로비가 종료되었습니다.";
+                    _errorMessage = "The lobby is closed.";
                 }
     
                 continue; // 다음 업데이트 시도

@@ -63,7 +63,6 @@ public class SwordCharacterData : ScriptableObject
             name = characterName,
             characterPrefab = characterPrefab,
             portraitImage = characterPortrait,
-            themeColor = themeColor,
             skills = new CharacterData.SkillData[4]
         };
         
