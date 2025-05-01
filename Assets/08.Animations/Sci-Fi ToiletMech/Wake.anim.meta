@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+<<<<<<<< HEAD:Assets/04.Materials/Blue.mat.meta
+guid: 359e718a6549e164ea4b0038be6024cb
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+========
+guid: c734827f6b7565840ab722666e10af6a
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 7400000
+>>>>>>>> 0b01ca8 (Add Boss Skill Sample with Indicator):Assets/KTA/Animations/Wake.anim.meta
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
