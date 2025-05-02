@@ -34,6 +34,6 @@ namespace Boss.Skills
         }
         [ClientRpc] public virtual void ActivateIndicatorClientRpc() { }
         [ClientRpc] public virtual void ActivateSkillEffectClientRpc() { }
-        public virtual void ActivateDamageCollider() { }
+        public virtual void ActivateDamageCollider(float bossAtk) { }
     }
 }

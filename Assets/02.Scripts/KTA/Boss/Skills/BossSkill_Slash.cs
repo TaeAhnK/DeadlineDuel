@@ -12,6 +12,8 @@ namespace Boss.Skills
         [field: Header("Skill Data")]
         [field: SerializeField] private float radius;
 
+        [field: SerializeField] private float damageCoeff;
+
         [ClientRpc]
         public override void ActivateIndicatorClientRpc()
         {
@@ -24,7 +26,7 @@ namespace Boss.Skills
             skillEffectParticle.Play();
         }
 
-        public override void ActivateDamageCollider()
+        public override void ActivateDamageCollider(float bossAtk)
         {
             int layerMask = LayerMask.GetMask("Player");
             var size = Physics.OverlapSphereNonAlloc(BossPos.Value, radius, Colliders, layerMask);
@@ -42,7 +44,7 @@ namespace Boss.Skills
                         Debug.Log("[Boss] Hit Object : " + Colliders[i].gameObject.name);
                         if (Colliders[i].TryGetComponent<IDamageable>(out var damageable))
                         {
-                            damageable.TakeDamageServerRpc(10);
+                            damageable.TakeDamageServerRpc(bossAtk * damageCoeff);
                         }
                     }
                 }   

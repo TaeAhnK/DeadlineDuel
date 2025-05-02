@@ -13,12 +13,12 @@ namespace Boss.Skills
         public NetworkVariable<bool> isSkillActive = new (writePerm: NetworkVariableWritePermission.Server);
 
         [SerializeField] private List<BossSkill> skillsPrefab =  new List<BossSkill>();
-        private byte currentSkillIndex;
+        [SerializeField] private byte currentSkillIndex;
         private BossSkill currentSkill;
 
         private byte SelectSkill() // TODO : Need to Add Logic
         {
-            return 0;
+            return (byte) Random.Range(0, skillsPrefab.Count);
         }
 
         public void ActivateSkill()
@@ -52,7 +52,7 @@ namespace Boss.Skills
             // Play Effect and Damage Collider
             yield return new WaitForSeconds(currentSkill.EffectTime);
             currentSkill.ActivateSkillEffectClientRpc();
-            currentSkill.ActivateDamageCollider();
+            currentSkill.ActivateDamageCollider(bossStateMachine.BossStats.Atk.Value);
         }
 
         private IEnumerator EndSkillAnimation(float waitTime)

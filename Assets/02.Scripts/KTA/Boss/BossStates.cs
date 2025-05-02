@@ -201,12 +201,14 @@ namespace Boss
 
     public class BossDeathState : BossBaseState
     {
+        private readonly int deathHash = Animator.StringToHash("Death");
         public BossDeathState(BossStateMachine stateMachine) : base(stateMachine) { }
 
         public override void Enter()
         {
             if (!StateMachine.IsServer) return; // Only on Server
-            throw new System.NotImplementedException();
+            Debug.Log("[Boss] Death State");
+            SetAnimatorTrigger(deathHash);
         }
 
         public override void Tick(float deltaTime) { }

@@ -34,9 +34,10 @@ namespace Boss
             
             ChangeState((byte) BossState.Sleep);    // Initial State : Sleep
         }
-
+        
         private void Init()
         {
+            // Set States
             IdleState = new BossIdleState(this);
             WakeState = new BossWakeState(this);
             ChaseState = new BossChaseState(this);
@@ -51,6 +52,7 @@ namespace Boss
             StateDict.Add((byte) BossState.Death, DeathState);
             StateDict.Add((byte) BossState.Sleep, SleepState);
             
+            // Set Network Transform
             NetworkTransform.Interpolate = true;
             NetworkTransform.PositionThreshold = 0.1f;
             NetworkTransform.RotAngleThreshold = 3f;
@@ -60,31 +62,39 @@ namespace Boss
             {
                 NavMeshAgent.updatePosition = true;
                 NavMeshAgent.updateRotation = true;
+                    
+                BossStats.Speed.OnValueChanged += OnSpeedChanged;
+                BossStats.OnDeath += OnDeathMessage;
+                // TODO : Subscribe OnWakeMessage to Wake
             }
         }
-        
-        private void OnEnable()
+
+        public override void OnNetworkDespawn()
+        {
+            base.OnNetworkDespawn();
+            if (!IsServer) return;  // Server Code
+
+            if (BossStats)
+            {
+                BossStats.Speed.OnValueChanged -= OnSpeedChanged;
+                BossStats.OnDeath -= OnDeathMessage;
+            }
+            // TODO : Unsubscribe OnWakeMessage to Wake
+        }
+
+        private void OnSpeedChanged(float prev, float next)
         {
             if (!IsServer) return; // Server Code
-            // TODO : Subscribe OnWakeMessage to Wake
-            // TODO : Subscribe OnDeathMessage to Death
-        }
-        
-        private void OnDisable()
-        {
-            if (!IsServer) return;  // Server Code
-             // TODO : Unsubscribe OnWakeMessage to Wake
-             // TODO : Unsubscribe OnDeathMessage to Death
+            NavMeshAgent.speed = next;
         }
         
         private void OnDeathMessage()
         {
             if (!IsServer) return;  // Server Code
-            
             ChangeState((byte) BossState.Death);
         }
 
-        public void OnWakeMessage() // TODO : to private
+        public void OnWakeMessage() // TODO : to private and subscribe
         {
             if (!IsServer) return;  // Server Code
             

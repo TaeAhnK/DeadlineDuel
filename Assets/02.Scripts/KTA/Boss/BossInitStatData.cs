@@ -9,5 +9,9 @@ namespace Stats.Boss
         [SerializeField] public float Atk;
         [SerializeField] public float Def;
         [SerializeField] public float AtkSpeed;
+
+        [SerializeField] public float Speed;
+        
+
     }
 }
