@@ -303,7 +303,7 @@ Animator:
   m_Controller: {fileID: 9100000, guid: f88202ea086bb3a4ca1d12dff03818ed, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
-  m_ApplyRootMotion: 0
+  m_ApplyRootMotion: 1
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
   m_WarningMessage: 
@@ -323,7 +323,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 3914434620
+  GlobalObjectIdHash: 1546194540
   InScenePlacedSourceGlobalObjectIdHash: 0
   AlwaysReplicateAsRoot: 0
   SynchronizeTransform: 1
@@ -351,6 +351,7 @@ MonoBehaviour:
   <NetworkTransform>k__BackingField: {fileID: 7478305811467815490}
   <NavMeshAgent>k__BackingField: {fileID: 8324028957290615135}
   <BossSkillController>k__BackingField: {fileID: 8916276821653567525}
+  <BossStats>k__BackingField: {fileID: 0}
   <PlayerDetectRange>k__BackingField: 10
   <MovementSpeed>k__BackingField: 1
 --- !u!114 &8916276821653567525
@@ -367,9 +368,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   networkAnimator: {fileID: 6897509941174227141}
   bossStateMachine: {fileID: 8393580528185546666}
-  IsSkillActive:
+  isSkillActive:
     m_InternalValue: 0
-  skills: []
   skillsPrefab:
   - {fileID: 1397753698253553316}
 --- !u!114 &7478305811467815490
@@ -418,17 +418,17 @@ MonoBehaviour:
   TransitionStateInfoList:
   - IsCrossFadeExit: 0
     Layer: 0
-    OriginatingState: -2089788878
-    DestinationState: 892433512
-    TransitionDuration: 0.4922619
-    TriggerNameHash: 892433512
-    TransitionIndex: 0
-  - IsCrossFadeExit: 0
-    Layer: 0
     OriginatingState: -822940248
     DestinationState: -2057670997
     TransitionDuration: 0.25
     TriggerNameHash: -2057670997
+    TransitionIndex: 0
+  - IsCrossFadeExit: 0
+    Layer: 0
+    OriginatingState: -453240694
+    DestinationState: 892433512
+    TransitionDuration: 0.25
+    TriggerNameHash: 892433512
     TransitionIndex: 0
   m_Animator: {fileID: 8170360866516879486}
 --- !u!114 &1872306085889274104

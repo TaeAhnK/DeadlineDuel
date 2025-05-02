@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using Unity.Netcode;
 using Unity.Netcode.Components;
 using UnityEngine;
@@ -9,89 +10,55 @@ namespace Boss.Skills
     {
         [SerializeField] private NetworkAnimator networkAnimator;
         [SerializeField] private BossStateMachine bossStateMachine;
-        public NetworkVariable<bool> IsSkillActive = new (writePerm: NetworkVariableWritePermission.Server);
+        public NetworkVariable<bool> isSkillActive = new (writePerm: NetworkVariableWritePermission.Server);
 
-        [SerializeField] private List<BossSkill> skills =  new List<BossSkill>(); // TODO: Will Erase
         [SerializeField] private List<BossSkill> skillsPrefab =  new List<BossSkill>();
         private byte currentSkillIndex;
         private BossSkill currentSkill;
 
-        private void Awake()
-        {
-
-        }
-
-        private byte SelectSkill()
+        private byte SelectSkill() // TODO : Need to Add Logic
         {
             return 0;
         }
-        
-        [ServerRpc]
-        public void ActivateSkillServerRpc()
+
+        public void ActivateSkill()
         {
-            if (!IsServer) return; // Only on Host
-            
+            if (!IsServer) return;  // Only on Server
+
             currentSkillIndex = SelectSkill();
             currentSkill = skillsPrefab[currentSkillIndex];
-            ActivateSkillClientRpc(currentSkillIndex);
-            IsSkillActive.Value = true;
-            networkAnimator.SetTrigger(currentSkill.BossSkillHash); // Play Skill Animation
+            SetCurrentSkillClientRpc(currentSkillIndex);
+            StartCoroutine(ExecuteSkillSequence());
+            StartCoroutine(EndSkillAnimation(currentSkill.SkillAnimationTime));
         }
 
         [ClientRpc]
-        private void ActivateSkillClientRpc(byte skillIndex)
+        private void SetCurrentSkillClientRpc(byte skillIndex)
         {
             currentSkill = skillsPrefab[skillIndex];
         }
         
-        private void OnPlayIndicator() // Animation Event
+        private IEnumerator ExecuteSkillSequence()
         {
-            if (bossStateMachine.BossCharacter.GetTargetPlayer(out Transform targetPlayer))
-            {
-                currentSkill.PlayIndicatorClient(transform.position, targetPlayer.transform.position);
-            }
-            else
-            {
-                Debug.Log("[Boss] [Error] No Indicator due to No Target");
-            }
+            // Start Skill
+            isSkillActive.Value = true;
+            currentSkill.ActivateSkill(gameObject.transform.position, gameObject.transform.position); // TODO : Get TargetPlayer
+            networkAnimator.SetTrigger(currentSkill.BossSkillHash); // Play Skill Animation
+            
+            // Play Indicator
+            yield return new WaitForSeconds(currentSkill.IndicatorTime);
+            currentSkill.ActivateIndicatorClientRpc();
+            
+            // Play Effect and Damage Collider
+            yield return new WaitForSeconds(currentSkill.EffectTime);
+            currentSkill.ActivateSkillEffectClientRpc();
+            currentSkill.ActivateDamageCollider();
         }
 
-        private void OnPlaySkill() // Animation Event
+        private IEnumerator EndSkillAnimation(float waitTime)
         {
-            if (IsServer)
-            {
-                PlaySkillServerRpc();   
-            }
-            if (IsClient)
-            {
-                PlaySkillClient();   
-            }
+            yield return new WaitForSeconds(waitTime);
+            isSkillActive.Value = false;
         }
-
-        [ServerRpc]
-        private void PlaySkillServerRpc()
-        {
-            if (!IsServer) return;
-            currentSkill.PlayColliderServerRpc();
-        }
-        
-        private void PlaySkillClient()
-        {
-            currentSkill.PlayEffectClient();
-        }
-        
-        private void OnAnimationEnd() // Animation Event
-        {
-            if (!IsServer) return;
-            AnimationEndServerRpc();
-        }
-
-        [ServerRpc]
-        private void AnimationEndServerRpc()
-        {
-            if (!IsServer) return;
-            IsSkillActive.Value = false;
-        }
-        
     }
 }
