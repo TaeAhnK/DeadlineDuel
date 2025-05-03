@@ -7,41 +7,67 @@ using UnityEngine;
 /// </summary>
 public class Object_Base : MonoBehaviour
 {
-    public float attack = 10f;
-    public float defense = 5f;
-    public float attackSpeed = 1f;
-    public float moveSpeed = 5f;
-    public float coolTime = 1.0f;
+    public float baseAttack = 10f;
+    public float baseDefense = 5f;
+    public float baseAttackSpeed = 1f;
+    public float baseMoveSpeed = 5f;
+    public float baseCoolTime = 1.0f;
 
-    // 버프/디버프 적용
-    public void ApplyBuffDebuff(BuffTypeEnum buffType, float value) {
-        switch (buffType) {
-            case BuffTypeEnum.Attack:
-                attack = Mathf.Max(0, attack + value);  // 음수 방지    // 리롤 할거 생각하면 필요 없는 기능일지도..
-                Debug.Log($"플레이어 공격력 {value} 변경 → 현재: {attack}");
-                break;
+    [Header("Current Stats (Read Only At Editor)")]
+    [SerializeField] private float currentAttack;
+    [SerializeField] private float currentDefense;
+    [SerializeField] private float currentAttackSpeed;
+    [SerializeField] private float currentMoveSpeed;
+    [SerializeField] private float currentCoolTime;
 
-            case BuffTypeEnum.Defense:
-                defense += value;
-                Debug.Log($"플레이어 방어력 {value} 변경 → 현재: {defense}");
-                break;
+    private List<BuffDebuff> activeBuffs = new List<BuffDebuff>();  // 이 오브젝트에 활성화된 버프/디버프 리스트
 
-            case BuffTypeEnum.AttackSpeed:
-                attackSpeed = Mathf.Max(0, attackSpeed + value);    // 음수 방지
-                Debug.Log($"플레이어 공격속도 {value} 변경 → 현재: {attackSpeed}");
-                break;
+    // 실제 스탯 계산 (원본 + 버프 효과)
+    public float Attack => GetFinalStat(baseAttack, BuffTypeEnum.Attack);
+    public float Defense => GetFinalStat(baseDefense, BuffTypeEnum.Defense);
+    public float AttackSpeed => GetFinalStat(baseAttackSpeed, BuffTypeEnum.AttackSpeed);
+    public float MoveSpeed => GetFinalStat(baseMoveSpeed, BuffTypeEnum.MoveSpeed);
+    public float CoolTime => GetFinalStat(baseCoolTime, BuffTypeEnum.Cooltime);
 
-            case BuffTypeEnum.MoveSpeed:
-                moveSpeed = Mathf.Max(0, moveSpeed + value); // 음수 방지
-                Debug.Log($"플레이어 이동속도 {value} 변경 → 현재: {moveSpeed}");
-                break;
+    private void Update() {
+    #if UNITY_EDITOR
+        currentAttack = Attack;
+        currentDefense = Defense;
+        currentAttackSpeed = AttackSpeed;
+        currentMoveSpeed = MoveSpeed;
+        currentCoolTime = CoolTime;
+    #endif
+    }
 
-            case BuffTypeEnum.Cooltime:
-                coolTime = Mathf.Max(0, coolTime + value); // 음수 방지
-                Debug.Log($"플레이어 쿨타임 {value} 변경 → 현재: {coolTime}");
-                break;
+    /// <summary>
+    /// BuffDebuff.cs에서 호출하여 Object_Base에 버프 추가
+    /// </summary>
+    public void ApplyBuffDebuff(BuffDebuff buff) {
+        activeBuffs.Add(buff);
+    }
+
+    /// <summary>
+    /// BuffDebuff.cs에서 호출하여 Object_Base에 걸려있는 버프 제거
+    /// </summary>
+    public void RemoveBuffDebuff(BuffDebuff buff) {
+        if (activeBuffs.Contains(buff)) {
+            activeBuffs.Remove(buff);
         }
     }
+
+    /// <summary>
+    /// 공격력 증가버프 감소디버프가 동시에 존재하여도 적용되도록 Modifier 배치
+    /// </summary>
+    private float GetFinalStat(float baseValue, BuffTypeEnum targetType) {
+        float totalModifier = 0f;
+        foreach (BuffDebuff buff in activeBuffs) {
+            if (buff.buffType == targetType) {
+                totalModifier += buff.value;
+            }
+        }
+        return Mathf.Max(0, baseValue + totalModifier); // 음수 방지
+    }
+
 
     public virtual void UpdateHP(float damage) {
 

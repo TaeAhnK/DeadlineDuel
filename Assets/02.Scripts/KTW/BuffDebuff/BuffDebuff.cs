@@ -21,10 +21,13 @@ public class BuffDebuff : MonoBehaviour
     }
 
     private void ApplyEffect(bool apply) {
+        if (apply) {
+            target.ApplyBuffDebuff(this);
+        }
+        else {
+            target.RemoveBuffDebuff(this);
+        }
         
-        float value = apply ? this.value : -this.value;
-
-        target.ApplyBuffDebuff(buffType, value);
     }
 
     private void OnDestroy() {

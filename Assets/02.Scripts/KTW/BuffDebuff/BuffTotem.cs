@@ -97,15 +97,15 @@ public class BuffTotem : Object_Base
     }
 
     private Object_Base FindPlayer() {
-        return FindObjectOfType<Object_Base>();
+        return GamePlayManager_t.Instance.GetPlayer();
     }
 
     private Object_Base FindEnemy() {
-        return FindObjectOfType<Object_Base>();
+        return GamePlayManager_t.Instance.GetEnemy();
     }
 
     private Object_Base FindBoss() {
-        return FindObjectOfType<Object_Base>();
+        return GamePlayManager_t.Instance.GetEnemyBoss();
     }
 
     private void OnDestroy() {
