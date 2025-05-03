@@ -12,12 +12,10 @@ namespace Boss.Skills
         [field: Header("Skill Data")]
         [field: SerializeField] private float radius;
 
-        [field: SerializeField] private float damageCoeff;
-
         [ClientRpc]
         public override void ActivateIndicatorClientRpc()
         {
-            SkillIndicator.ActivateIndicator(BossPos.Value, 180f, 0.5f);
+            SkillIndicator.ActivateIndicator(BossPos.Value, 180f, 0.5f, 0f);
         }
 
         [ClientRpc]
@@ -51,7 +49,7 @@ namespace Boss.Skills
             }
         }
         
-        void OnDrawGizmos()
+        void OnDrawGizmosSelected()
         {
             Gizmos.color = Color.red;
             Gizmos.DrawWireSphere(BossPos.Value, radius);

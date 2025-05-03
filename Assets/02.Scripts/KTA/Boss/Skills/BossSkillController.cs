@@ -35,6 +35,7 @@ namespace Boss.Skills
         [ClientRpc]
         private void SetCurrentSkillClientRpc(byte skillIndex)
         {
+            currentSkillIndex = skillIndex;
             currentSkill = skillsPrefab[skillIndex];
         }
         

@@ -14,6 +14,7 @@ namespace Boss.Skills
         [field: SerializeField] public float IndicatorTime { get; protected set; }
         [field: SerializeField] public float EffectTime { get; protected set; }
         [field: SerializeField] public float SkillAnimationTime { get; protected set; }
+        [field: SerializeField] protected float damageCoeff;
 
         public int BossSkillHash { get; private set; }
         
