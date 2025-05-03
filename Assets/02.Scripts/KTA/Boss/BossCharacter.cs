@@ -5,17 +5,28 @@ namespace Boss
 {
     public class BossCharacter : NetworkBehaviour
     {
-        /// <summary>
-        ///  This Class is for Network Init
-        ///  You need to Set Target Player Here
-        ///  This code is yet test code
-        /// </summary>
         [field: SerializeField] public NetworkVariable<ulong> AssignedPlayerId = new();
         [field: SerializeField] private Transform targetPlayer;
+        [field: SerializeField] public TransparencyController transparencyController;
         
-        [field: SerializeField] private Material OpaqueMaterial;
-        [field: SerializeField] private Material TransparentMaterial;
+        public bool IsClientBoss => AssignedPlayerId.Value == NetworkManager.Singleton.LocalClientId;
+        
+        public override void OnNetworkSpawn()
+        {
+            base.OnNetworkSpawn();
+            Debug.Log($"[Boss] Boss {gameObject.name} AssignedPlayerId: {AssignedPlayerId.Value}, LocalClientId: {NetworkManager.Singleton.LocalClientId}");
+            
+            if (AssignedPlayerId.Value == NetworkManager.Singleton.LocalClientId)
+            {
+                transparencyController.SetToOpaque();
+            }
+            else
+            {
+                transparencyController.SetToTransparent();
+            }
+        }
 
+        // From Here Need Fix
         [ServerRpc]
         public void AssignPlayerServerRpc(ulong clientId)
         {

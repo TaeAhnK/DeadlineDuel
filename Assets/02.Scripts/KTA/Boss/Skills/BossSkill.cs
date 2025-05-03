@@ -7,6 +7,7 @@ namespace Boss.Skills
     public abstract class BossSkill : NetworkBehaviour
     {
         [field: Header("Dependencies")]
+        [field: SerializeField] protected BossCharacter bossCharacter;
         [field: SerializeField] public SkillIndicator SkillIndicator { get; protected set; }
         
         [field: Header("Skill Data")]

@@ -15,12 +15,14 @@ namespace Boss.Skills
         [ClientRpc]
         public override void ActivateIndicatorClientRpc()
         {
+            if (!bossCharacter.IsClientBoss) return;
             SkillIndicator.ActivateIndicator(BossPos.Value, 180f, 0.5f, 0f);
         }
 
         [ClientRpc]
         public override void ActivateSkillEffectClientRpc()
         {
+            if (!bossCharacter.IsClientBoss) return;
             skillEffectParticle.Play();
         }
 

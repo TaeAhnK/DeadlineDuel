@@ -15,12 +15,14 @@ public class BossSkill_GroundPowerHit : BossSkill
     [ClientRpc]
     public override void ActivateIndicatorClientRpc()
     {
+        if (!bossCharacter.IsClientBoss) return;
         SkillIndicator.ActivateIndicator(BossPos.Value, 360f, 1.6f, 0f);
     }
 
     [ClientRpc]
     public override void ActivateSkillEffectClientRpc()
     {
+        if (!bossCharacter.IsClientBoss) return;
         skillEffectParticle.Play();
     }
 

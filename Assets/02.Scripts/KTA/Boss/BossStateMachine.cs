@@ -96,8 +96,9 @@ namespace Boss
 
         public void OnWakeMessage() // TODO : to private and subscribe
         {
+            Debug.Log("Wake" + gameObject.name);
             if (!IsServer) return;  // Server Code
-            
+            Debug.Log("Is Server Wake" + gameObject.name);
             ChangeState((byte) BossState.Wake);
         }
         
