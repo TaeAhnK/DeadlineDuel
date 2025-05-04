@@ -79,6 +79,9 @@ public class TotemManager : MonoBehaviour
         );
         BuffTotem totem = newTotem.GetComponent<BuffTotem>();
 
+        // 버프 타입에 따라 다른 이펙트 생성, 현재 인덱스는 공/방/쿨타임 순서
+        int vbxIndex = (int)item.type;
+
         // 토템 데이터 설정
         totem.buffName = item.buffName;
         totem.targetType = item.target;
@@ -87,7 +90,7 @@ public class TotemManager : MonoBehaviour
         totem.spawnIndex = spawnIndex;
 
         GameObject vbxObj = Instantiate(
-            vbxPrefab[0],
+            vbxPrefab[vbxIndex],
             totem.transform // 부모를 토템으로 지정
         );
 

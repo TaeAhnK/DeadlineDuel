@@ -7,9 +7,9 @@ using UnityEngine.UI;
 public enum BuffTypeEnum{
     Attack,
     Defense,
-    AttackSpeed,
-    MoveSpeed,
     Cooltime,
+    MoveSpeed,
+    AttackSpeed,
 }
 
 public enum BuffTargetEnum {
