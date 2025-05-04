@@ -245,7 +245,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 3105269147
+  GlobalObjectIdHash: 3153851679
   InScenePlacedSourceGlobalObjectIdHash: 0
   AlwaysReplicateAsRoot: 0
   SynchronizeTransform: 1
@@ -266,8 +266,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e7719375947a12645974adb5cab96a6b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _cameraPrefab: {fileID: 7165694474223187399, guid: a2fffaf425d2c4f46bb343e1dce305d2,
-    type: 3}
   _rotationSpeed: 10
   _groundLayer:
     serializedVersion: 2
@@ -275,7 +273,7 @@ MonoBehaviour:
   _moveIndicatorPrefab: {fileID: 5246542383501486036, guid: 10b95771d7f40ae42adc44c578bd3872,
     type: 3}
   _skills:
-  - name: 
+  - name: AttackQ
     cooldown: 0
     effectPrefab: {fileID: 0}
     damage: 0
@@ -283,7 +281,7 @@ MonoBehaviour:
     aoeRadius: 0
     isTargeted: 0
     animationTrigger: 
-  - name: 
+  - name: AttackW
     cooldown: 0
     effectPrefab: {fileID: 0}
     damage: 0
@@ -291,7 +289,7 @@ MonoBehaviour:
     aoeRadius: 0
     isTargeted: 0
     animationTrigger: 
-  - name: 
+  - name: AttackE
     cooldown: 0
     effectPrefab: {fileID: 0}
     damage: 0
@@ -299,7 +297,7 @@ MonoBehaviour:
     aoeRadius: 0
     isTargeted: 0
     animationTrigger: 
-  - name: 
+  - name: AttackR
     cooldown: 0
     effectPrefab: {fileID: 0}
     damage: 0
@@ -310,6 +308,25 @@ MonoBehaviour:
   _skillOrigin: {fileID: 0}
   _healthBarBackground: {fileID: 8857315622119701966}
   _healthBarFill: {fileID: 2043904733756797997}
+  _maxCombo: 4
+  _comboWindow: 1
+  _comboDistance: 2
+  _comboDamage: 10
+  _normalAttackEffects:
+  - {fileID: 1872147318604286, guid: 245d829b1db8c7746ba524528c0a3b9e, type: 3}
+  - {fileID: 1872147318604286, guid: 09639402f7242b24cba533debaf81b7d, type: 3}
+  - {fileID: 1872147318604286, guid: 7c2946c437be2754a863d792ccfa0545, type: 3}
+  - {fileID: 1294101409476956, guid: 235a46590e42821488e329255ae5c974, type: 3}
+  _dashAttackEffect: {fileID: 1919708242137258, guid: cd2b888fa4a518f4fb4668549a4bdcdc,
+    type: 3}
+  _useEffectCustomRotation: 1
+  _normalAttackRotationOffsets:
+  - {x: -120, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 120, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  _dashAttackRotationOffset: {x: 0, y: 0, z: 0}
+  _attackEffectOrigin: {fileID: 3451665961435853733}
   _positionUpdateInterval: 0.05
   _positionThreshold: 0.01
   _rotationThreshold: 1
@@ -327,7 +344,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _playerController: {fileID: 409487912549870363}
   _animator: {fileID: 0}
-  _skillOrigin: {fileID: 0}
+  _skillOrigin: {fileID: 3451665961435853733}
   _slashEffectPrefab: {fileID: 0}
   _slashDamage: 25
   _slashRange: 3
@@ -342,7 +359,8 @@ MonoBehaviour:
   _dashDamage: 15
   _dashSpeed: 20
   _dashCooldown: 8
-  _ultimateEffectPrefab: {fileID: 0}
+  _ultimateEffectPrefab: {fileID: 6810844234100877735, guid: 88dd9c4a8854b804186fda4318305ba0,
+    type: 3}
   _ultimateDamage: 80
   _ultimateRange: 6
   _ultimateRadius: 4

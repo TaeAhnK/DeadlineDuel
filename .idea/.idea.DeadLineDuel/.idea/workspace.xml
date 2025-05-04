@@ -6,34 +6,12 @@
   <component name="ChangeListManager">
     <list default="true" id="1ef3ec2e-6ecc-4479-badc-e18c7073aaca" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.DeadLineDuel/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.DeadLineDuel/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/01.Scenes/03.GameLobby.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/01.Scenes/03.GameLobby.unity" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/01.Scenes/04.GamePlay.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/01.Scenes/04.GamePlay.unity" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/01.Scenes/PlayerSkillTest.unity" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/01.Scenes/PlayerSkillTest.unity.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/01.Scenes/PlayerSkillTest/NavMesh-Plane.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/01.Scenes/PlayerSkillTest/NavMesh-Plane.asset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/01.Scenes/PlayerSkillTest/NavMesh-Plane.asset.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/01.Scenes/PlayerSkillTest/NavMesh-Plane.asset.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Manager/GameLobbyManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Manager/GameLobbyManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Manager/GamePlayerManager.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Manager/GamePlayerManager.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Data/CharacterStats.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Data/CharacterStats.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Object/Object_Base.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Object/Object_Base.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Player/PlayerController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Player/PlayerController.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Player/QuadViewController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Player/QuadViewController.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Test/TestPlayerController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Test/TestPlayerController.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/03.Prefabs/Player.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/03.Prefabs/Player.prefab" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/03.Prefabs/QuadViewCamera.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/03.Prefabs/QuadViewCamera.prefab" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/04.Materials/Boss Skill VFX/Tech/Arrows_Rain_Decal_Tech.mat.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/04.Materials/Boss Skill VFX/Tech/Arrows_Rain_Decal_Tech.mat.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/04.Materials/Boss Skill VFX/Tech/TechCircle_Sight.mat.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/04.Materials/Boss Skill VFX/Tech/TechCircle_Sight.mat.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/04.Materials/Boss Skill VFX/Tech/TechSquare.mat.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/04.Materials/Boss Skill VFX/Tech/TechSquare.mat.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/04.Materials/Boss Skill VFX/Tech/TechSquare_Corners.mat.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/04.Materials/Boss Skill VFX/Tech/TechSquare_Corners.mat.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/04.Materials/Boss Skill VFX/Tech/Tech_ShapesPickbook_Add.mat.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/04.Materials/Boss Skill VFX/Tech/Tech_ShapesPickbook_Add.mat.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/05.Textures/Boss Skill VFX/SmokeHarsh_BlackSpots.png.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/05.Textures/Boss Skill VFX/SmokeHarsh_BlackSpots.png.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/05.Textures/Boss Skill VFX/TechCircle_Target.png.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/05.Textures/Boss Skill VFX/TechCircle_Target.png.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/05.Textures/Boss Skill VFX/TechSquare.png.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/05.Textures/Boss Skill VFX/TechSquare.png.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/05.Textures/Boss Skill VFX/Tech_DecalRing.png.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/05.Textures/Boss Skill VFX/Tech_DecalRing.png.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/05.Textures/Boss Skill VFX/Tech_Packed_002.png.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/05.Textures/Boss Skill VFX/Tech_Packed_002.png.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/05.Textures/Boss Skill VFX/TechnoNoise.TGA.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/05.Textures/Boss Skill VFX/TechnoNoise.TGA.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/08.Animations/Player/Kosmo.controller" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/08.Animations/Player/Kosmo.controller.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/06.Models/Material.003.mat" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/06.Models/Material.003.mat" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/08.Animations/Player/Cosmo.controller" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/08.Animations/Player/Cosmo.controller" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/TextMesh Pro/Resources/Fonts &amp; Materials/LiberationSans SDF - Fallback.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/TextMesh Pro/Resources/Fonts &amp; Materials/LiberationSans SDF - Fallback.asset" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />

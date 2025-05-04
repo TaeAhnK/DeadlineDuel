@@ -39,6 +39,7 @@ public class CharacterStats : MonoBehaviour
         
         if (currentHP <= 0)
         {
+            
             OnDeath?.Invoke();
         }
     }

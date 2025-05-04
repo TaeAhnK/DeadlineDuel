@@ -41,6 +41,7 @@ public class Object_Base : NetworkBehaviour
         _stats = GetComponent<CharacterStats>();
         if (_stats == null)
         {
+            
             _stats = gameObject.AddComponent<CharacterStats>();
         }
         
@@ -113,21 +114,6 @@ public class Object_Base : NetworkBehaviour
             // 게임 매니저를 통해 UI 업데이트
             GamePlayManager.Instance.UpdatePlayerStatsFromServer(
                 _stats.Attack, _stats.Defense, _stats.AttackSpeed, (int)_stats.CoolTime);
-        }
-    }
-
-    public virtual void UpdateHP(float damage) 
-    {
-        if (IsServer)
-        {
-            // CharacterStats를 통해 데미지 처리
-            _stats.TakeDamage(damage);
-            
-            // 플레이어인 경우 UI 업데이트
-            if (!string.IsNullOrEmpty(playerId.Value.Value))
-            {
-                GamePlayManager.Instance.UpdatePlayerHPFromServer(_stats.CurrentHP / _stats.MaxHP);
-            }
         }
     }
     
