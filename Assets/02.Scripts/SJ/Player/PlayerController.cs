@@ -50,6 +50,7 @@ public class PlayerController : NetworkBehaviour
     private GameObject _moveIndicator;
     private Object_Base _objectBase;
     private CharacterStats _characterStats;
+    [SerializeField] private TransparencyController[] _transparencyControllers;
     
     //일반공격콤보변수
     private int _currentCombo = 0;
@@ -140,6 +141,32 @@ public class PlayerController : NetworkBehaviour
 
         // 체력바 초기화
         InitializeHealthBar();
+        
+        // 자신의 플레이어일 경우 초기화
+        if (IsOwner)
+        {
+            // 플레이어 ID 설정
+            string playerId = "Player" + NetworkManager.Singleton.LocalClientId.ToString();
+            
+            // Object_Base에 플레이어 ID 설정
+            if (_objectBase != null)
+            {
+                _objectBase.SetPlayerIdServerRpc(playerId);
+            }
+            
+            // 카메라 설정
+            SetupCamera();
+            CreateMoveIndicator();
+            
+            // 스킬 정보 초기화
+            InitializeSkills();
+            
+            // 캐릭터 데이터 로드
+            LoadCharacterData();
+        }
+        
+        // 투명도 설정
+        SetTransparency();
         
         // 네트워크 변수 콜백
         _isMoving.OnValueChanged += OnMovingChanged;
@@ -943,6 +970,24 @@ public class PlayerController : NetworkBehaviour
             if (_animator != null && !string.IsNullOrEmpty(_skills[newValue].animationTrigger))
             {
                 _animator.SetTrigger(_skills[newValue].animationTrigger);
+            }
+        }
+    }
+
+    private void SetTransparency()
+    {
+        if (IsOwner)
+        {
+            foreach (var transparencyController in _transparencyControllers)
+            {
+                transparencyController.SetToOpaque();
+            }
+        }
+        else
+        {
+            foreach (var transparencyController in _transparencyControllers)
+            {
+                transparencyController.SetToTransparent();
             }
         }
     }

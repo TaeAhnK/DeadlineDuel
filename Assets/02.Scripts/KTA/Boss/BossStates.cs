@@ -91,7 +91,7 @@ namespace Boss
             // Get Wake Animation Length
             if (!StateMachine.IsServer) return;
             
-            AnimationClip[] clips = StateMachine.NetworkAnimator.Animator.runtimeAnimatorController.animationClips;
+            AnimationClip[] clips = Core.NetworkAnimator.Animator.runtimeAnimatorController.animationClips;
             foreach (var clip in clips)
             {
                 if (clip.name == "Wake")
@@ -133,7 +133,7 @@ namespace Boss
             if (!StateMachine.IsServer) return; // Only on Server
             
             Debug.Log("[Boss] Chase State");
-            StateMachine.NavMeshAgent.speed = StateMachine.MovementSpeed;
+            Core.NavMeshAgent.speed = StateMachine.MovementSpeed;
         }
         
         public override void Tick(float deltaTime)
@@ -149,7 +149,7 @@ namespace Boss
             TurnToPlayer();
             MoveToPlayer(deltaTime);
             
-            float speedPercent = StateMachine.NavMeshAgent.velocity.magnitude / StateMachine.MovementSpeed;
+            float speedPercent = Core.NavMeshAgent.velocity.magnitude / StateMachine.MovementSpeed;
             SetAnimatorFloat(speedHash, speedPercent, AnimatorDampTime, deltaTime);
         }
 
@@ -157,20 +157,20 @@ namespace Boss
         {
             if (!StateMachine.IsServer) return; // Only on Server
 
-            StateMachine.NavMeshAgent.ResetPath();
-            StateMachine.NavMeshAgent.velocity = Vector3.zero;
+            Core.NavMeshAgent.ResetPath(); 
+            Core.NavMeshAgent.velocity = Vector3.zero;
             
             // Adjust Transform by Force
-            StateMachine.NetworkTransform.Teleport(StateMachine.transform.position, StateMachine.transform.rotation, StateMachine.transform.localScale);
+            Core.NetworkTransform.Teleport(StateMachine.transform.position, StateMachine.transform.rotation, StateMachine.transform.localScale);
         }
 
         private void MoveToPlayer(float deltaTime)
         {
             if (!StateMachine.IsServer) return; // Only on Server
             
-            if (StateMachine.BossCharacter.GetTargetPlayer(out Transform targetPlayer))
+            if (Core.BossCharacter.GetTargetPlayer(out Transform targetPlayer))
             {
-                StateMachine.NavMeshAgent.destination = targetPlayer.transform.position;
+                Core.NavMeshAgent.destination = targetPlayer.transform.position;
             }
         }
     }
@@ -183,14 +183,14 @@ namespace Boss
         {
             if (!StateMachine.IsServer) return; // Only on Server
             Debug.Log("[Boss] Attack State");
-            StateMachine.BossSkillController.ActivateSkill(); // TODO: -> ActivateSkill
+            Core.BossSkillController.ActivateSkill(); // TODO: -> ActivateSkill
         }
         
         public override void Tick(float deltaTime)
         {
             if (!StateMachine.IsServer) return; // Only on Server
             
-            if (!StateMachine.BossSkillController.isSkillActive.Value)
+            if (!Core.BossSkillController.isSkillActive.Value)
             {
                 StateMachine.ChangeState((byte) BossState.Idle);
             }

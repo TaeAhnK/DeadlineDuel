@@ -44,7 +44,7 @@ namespace Boss.Skills
                         Debug.Log("[Boss] Hit Object : " + Colliders[i].gameObject.name);
                         if (Colliders[i].TryGetComponent<IDamageable>(out var damageable))
                         {
-                            damageable.TakeDamageServerRpc(bossAtk * damageCoeff);
+                            damageable.TakeDamage(bossAtk * damageCoeff);
                         }
                     }
                 }   

@@ -7,10 +7,12 @@ namespace Boss
     public abstract class BossBaseState : State
     {
         protected BossStateMachine StateMachine;
+        protected BossCore Core;
 
         public BossBaseState(BossStateMachine stateMachine)
         {
             this.StateMachine = stateMachine;
+            this.Core = stateMachine.BossCore;
         }
 
         protected void Turn(Vector3 lookPos)
@@ -34,7 +36,7 @@ namespace Boss
         {
             if (!StateMachine.IsServer) return; // Only On Server
             
-            if (StateMachine.BossCharacter.GetTargetPlayer(out Transform targetPlayer))
+            if (Core.BossCharacter.GetTargetPlayer(out Transform targetPlayer))
             {
                 Turn(targetPlayer.position - StateMachine.transform.position);                
             }
@@ -42,7 +44,7 @@ namespace Boss
         
         protected bool IsPlayerInRange() // Use with IsServer Check and TargetPlayer != null Check
         {
-            if (StateMachine.BossCharacter.GetTargetPlayer(out Transform targetPlayer))
+            if (Core.BossCharacter.GetTargetPlayer(out Transform targetPlayer))
             {
                 float distSqr = (targetPlayer.position - StateMachine.gameObject.transform.position).sqrMagnitude;
                 return distSqr <= StateMachine.PlayerDetectRange * StateMachine.PlayerDetectRange;
@@ -55,9 +57,9 @@ namespace Boss
         {
             if (!StateMachine.IsServer) return; // On Only On Server
 
-            if (Math.Abs(StateMachine.NetworkAnimator.Animator.GetFloat(hash) - value) > 0.1f)
+            if (Math.Abs(Core.NetworkAnimator.Animator.GetFloat(hash) - value) > 0.1f)
             {
-                StateMachine.NetworkAnimator.Animator.SetFloat(hash, value, animationDampTime, deltaTime);    
+                Core.NetworkAnimator.Animator.SetFloat(hash, value, animationDampTime, deltaTime);    
             }
         }
 
@@ -65,7 +67,7 @@ namespace Boss
         {
             if (!StateMachine.IsServer) return; // On Only On Server
             
-            StateMachine.NetworkAnimator.SetTrigger(hash);
+            Core.NetworkAnimator.SetTrigger(hash);
         }
     }
 }

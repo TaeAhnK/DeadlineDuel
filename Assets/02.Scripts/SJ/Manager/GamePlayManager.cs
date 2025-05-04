@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Boss;
+using Stats.Boss;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -44,7 +46,8 @@ public class GamePlayManager : NetworkBehaviour
     public string localPlayerId { get; private set; }
     
     // 보스 스폰 이벤트
-    public System.Action OnBossSpawned;  
+    public System.Action OnBossSpawned;
+    public System.Action OnBossWake;
     
     private void Awake()
     {
@@ -124,6 +127,7 @@ public class GamePlayManager : NetworkBehaviour
         
         // 플레이어 스폰 처리
         SpawnPlayerServerRpc(clientId);
+        SpawnBoss(clientId);
     }
     
     private void OnClientDisconnected(ulong clientId)
@@ -213,11 +217,11 @@ public class GamePlayManager : NetworkBehaviour
             playerPillarInteraction[playerId] = true;
             
             // 모든 플레이어가 기둥과 상호작용했는지 확인
-            CheckBossSpawnCondition();
+            CheckBossWakeCondition();
         }
     }
     
-    private void CheckBossSpawnCondition()
+    private void CheckBossWakeCondition()
     {
         // 연결된 모든 플레이어가 기둥과 상호작용했는지 확인
         bool allInteracted = true;
@@ -233,11 +237,13 @@ public class GamePlayManager : NetworkBehaviour
         // 모든 플레이어가 기둥과 상호작용했다면 보스 스폰
         if (allInteracted && !isBossSpawned.Value)
         {
-            SpawnBoss();
+            OnBossWake?.Invoke();
+            // 보스 Wake 시 게임 타이머 시작
+            StartGameTimer();
         }
     }
     
-    private void SpawnBoss()
+    private void SpawnBoss(ulong clientId)
     {
         if (!IsServer) return;
     
@@ -246,22 +252,29 @@ public class GamePlayManager : NetworkBehaviour
         // 보스 스폰 지점에 보스 인스턴스화
         GameObject bossInstance = Instantiate(bossPrefab, bossSpawnPoint.position, bossSpawnPoint.rotation);
         NetworkObject bossNetObject = bossInstance.GetComponent<NetworkObject>();
-    
+        
         if (bossNetObject != null)
         {
+            BossCharacter bossCharacter = bossNetObject.GetComponent<BossCharacter>();
+            bossCharacter.AssignedPlayerId.Value = clientId;
+            
             bossNetObject.Spawn();
             spawnedBoss = bossNetObject;
         
             // 보스 이벤트 설정
-            Object_Base bossBase = bossInstance.GetComponent<Object_Base>();
-            if (bossBase != null)
+            BossStats bossStats = bossNetObject.GetComponent<BossStats>();
+            if (bossStats != null)
             {
-                bossBase.OnDamageTaken += UpdateBossHP;
-                bossBase.OnObjectDestroyed += OnBossDefeated;
+                bossStats.CurrentHealth.OnValueChanged += UpdateBossHP;
+                bossStats.OnDeath += OnBossDefeated;
             }
-        
-            // 보스 스폰 시 게임 타이머 시작
-            StartGameTimer();
+            
+            // Object_Base bossBase = bossInstance.GetComponent<Object_Base>();
+            // if (bossBase != null)
+            // {
+            //     bossBase.OnDamageTaken += UpdateBossHP;
+            //     bossBase.OnObjectDestroyed += OnBossDefeated;
+            // }
         
             // 클라이언트에 알리기 위해 네트워크 변수 업데이트
             isBossSpawned.Value = true;
@@ -286,7 +299,7 @@ public class GamePlayManager : NetworkBehaviour
         Debug.Log($"보스 HP 업데이트: {hpPercentage:P}");
     }
     
-    private void OnBossDefeated(Object_Base obj)
+    private void OnBossDefeated()
     {
         if (!IsServer) return;
         

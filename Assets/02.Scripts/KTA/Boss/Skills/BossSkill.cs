@@ -6,7 +6,8 @@ namespace Boss.Skills
 {
     public abstract class BossSkill : NetworkBehaviour
     {
-        [field: Header("Dependencies")]
+        [field: Header("Dependencies")] 
+        [field: SerializeField] protected BossCore BossCore { get; set; }
         [field: SerializeField] protected BossCharacter bossCharacter;
         [field: SerializeField] public SkillIndicator SkillIndicator { get; protected set; }
         
@@ -25,7 +26,7 @@ namespace Boss.Skills
         
         protected virtual void Awake()
         {
-           BossSkillHash =  Animator.StringToHash(BossSkillName);
+           BossSkillHash = Animator.StringToHash(BossSkillName);
         }
         
         public virtual void ActivateSkill(Vector3 bossPos, Vector3 targetPos)

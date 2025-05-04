@@ -34,9 +34,9 @@ namespace Stats.Boss
             }
         }
 
-        [ServerRpc(RequireOwnership = false)]
-        public void TakeDamageServerRpc(float damage)
+        public void TakeDamage(float damage)
         {
+            if (!IsServer) return;
             if (IsDead) return;
             
             // TODO : Add Def Calculation

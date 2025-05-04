@@ -3465,6 +3465,30 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: fc3956512bc7215439fff8c79e83ed8c,
         type: 3}
       insertIndex: -1
+      addedObject: {fileID: 1636695366732729275}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: fc3956512bc7215439fff8c79e83ed8c,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1872306085889274104}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: fc3956512bc7215439fff8c79e83ed8c,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8942110842192541058}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: fc3956512bc7215439fff8c79e83ed8c,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8393580528185546666}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: fc3956512bc7215439fff8c79e83ed8c,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8916276821653567525}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: fc3956512bc7215439fff8c79e83ed8c,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6897509941174227141}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: fc3956512bc7215439fff8c79e83ed8c,
+        type: 3}
+      insertIndex: -1
       addedObject: {fileID: 7478305811467815490}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: fc3956512bc7215439fff8c79e83ed8c,
         type: 3}
@@ -3477,27 +3501,7 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: fc3956512bc7215439fff8c79e83ed8c,
         type: 3}
       insertIndex: -1
-      addedObject: {fileID: 6897509941174227141}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: fc3956512bc7215439fff8c79e83ed8c,
-        type: 3}
-      insertIndex: -1
       addedObject: {fileID: 7536993850289426829}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: fc3956512bc7215439fff8c79e83ed8c,
-        type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1872306085889274104}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: fc3956512bc7215439fff8c79e83ed8c,
-        type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 8393580528185546666}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: fc3956512bc7215439fff8c79e83ed8c,
-        type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 8916276821653567525}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: fc3956512bc7215439fff8c79e83ed8c,
-        type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 8942110842192541058}
     - targetCorrespondingSourceObject: {fileID: -8115396509587922281, guid: fc3956512bc7215439fff8c79e83ed8c,
         type: 3}
       insertIndex: -1
@@ -3536,6 +3540,137 @@ MonoBehaviour:
   SpawnWithObservers: 1
   DontDestroyWithOwner: 0
   AutoObjectParentSync: 1
+--- !u!114 &1636695366732729275
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9046841340612204629}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a9618fbe9cd742dcaca2b0acd708bedc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  <BossCharacter>k__BackingField: {fileID: 1872306085889274104}
+  <BossStats>k__BackingField: {fileID: 8942110842192541058}
+  <BossStateMachine>k__BackingField: {fileID: 8393580528185546666}
+  <BossSkillController>k__BackingField: {fileID: 8916276821653567525}
+  <NetworkAnimator>k__BackingField: {fileID: 6897509941174227141}
+  <NetworkTransform>k__BackingField: {fileID: 7478305811467815490}
+  <NavMeshAgent>k__BackingField: {fileID: 8324028957290615135}
+--- !u!114 &1872306085889274104
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9046841340612204629}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2363541a78da9694a85a61946401292f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  AssignedPlayerId:
+    m_InternalValue: 0
+  targetPlayer: {fileID: 0}
+  transparencyController: {fileID: 8092841135052153205}
+--- !u!114 &8942110842192541058
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9046841340612204629}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 64f4abaa8e824891ab7b822349041281, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  initStatData: {fileID: 11400000, guid: 154d898a10ed87b40a8798aad16920f8, type: 2}
+  MaxHealth:
+    m_InternalValue: 0
+  Atk:
+    m_InternalValue: 0
+  Def:
+    m_InternalValue: 0
+  AtkSpeed:
+    m_InternalValue: 0
+  Speed:
+    m_InternalValue: 0
+  CurrentHealth:
+    m_InternalValue: 0
+--- !u!114 &8393580528185546666
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9046841340612204629}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 957a981a8f724411ab91c4422ad1d208, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  currentStateID:
+    m_InternalValue: 0
+  <BossCore>k__BackingField: {fileID: 1636695366732729275}
+  <PlayerDetectRange>k__BackingField: 10
+  <MovementSpeed>k__BackingField: 1
+--- !u!114 &8916276821653567525
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9046841340612204629}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e68d0ded1a3b45e5ae9012c83f3c5c14, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bossCore: {fileID: 1636695366732729275}
+  isSkillActive:
+    m_InternalValue: 0
+  skillsPrefab:
+  - {fileID: 1397753698253553316}
+  - {fileID: 1771366020826701858}
+  currentSkillIndex: 0
+--- !u!114 &6897509941174227141
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9046841340612204629}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8d0727d5ae3244e3b569694d3912374, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  TransitionStateInfoList:
+  - IsCrossFadeExit: 0
+    Layer: 0
+    OriginatingState: -822940248
+    DestinationState: -2057670997
+    TransitionDuration: 0.25
+    TriggerNameHash: -2057670997
+    TransitionIndex: 0
+  - IsCrossFadeExit: 0
+    Layer: 0
+    OriginatingState: -763256873
+    DestinationState: 892433512
+    TransitionDuration: 0.25
+    TriggerNameHash: 892433512
+    TransitionIndex: 0
+  - IsCrossFadeExit: 0
+    Layer: 0
+    OriginatingState: -763256873
+    DestinationState: 2082794245
+    TransitionDuration: 0.25
+    TriggerNameHash: 2082794245
+    TransitionIndex: 1
+  m_Animator: {fileID: 8170360866516879486}
 --- !u!114 &7478305811467815490
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3610,41 +3745,6 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!114 &6897509941174227141
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9046841340612204629}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e8d0727d5ae3244e3b569694d3912374, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  TransitionStateInfoList:
-  - IsCrossFadeExit: 0
-    Layer: 0
-    OriginatingState: -822940248
-    DestinationState: -2057670997
-    TransitionDuration: 0.25
-    TriggerNameHash: -2057670997
-    TransitionIndex: 0
-  - IsCrossFadeExit: 0
-    Layer: 0
-    OriginatingState: -763256873
-    DestinationState: 892433512
-    TransitionDuration: 0.25
-    TriggerNameHash: 892433512
-    TransitionIndex: 0
-  - IsCrossFadeExit: 0
-    Layer: 0
-    OriginatingState: -763256873
-    DestinationState: 2082794245
-    TransitionDuration: 0.25
-    TriggerNameHash: 2082794245
-    TransitionIndex: 1
-  m_Animator: {fileID: 8170360866516879486}
 --- !u!136 &7536993850289426829
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -3668,89 +3768,6 @@ CapsuleCollider:
   m_Height: 2.3
   m_Direction: 1
   m_Center: {x: 0, y: 1.1, z: 0}
---- !u!114 &1872306085889274104
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9046841340612204629}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2363541a78da9694a85a61946401292f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  AssignedPlayerId:
-    m_InternalValue: 0
-  targetPlayer: {fileID: 0}
-  transparencyController: {fileID: 8092841135052153205}
---- !u!114 &8393580528185546666
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9046841340612204629}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 957a981a8f724411ab91c4422ad1d208, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  currentStateID:
-    m_InternalValue: 0
-  <BossCharacter>k__BackingField: {fileID: 1872306085889274104}
-  <NetworkAnimator>k__BackingField: {fileID: 6897509941174227141}
-  <NetworkTransform>k__BackingField: {fileID: 7478305811467815490}
-  <NavMeshAgent>k__BackingField: {fileID: 8324028957290615135}
-  <BossSkillController>k__BackingField: {fileID: 8916276821653567525}
-  <BossStats>k__BackingField: {fileID: 8942110842192541058}
-  <PlayerDetectRange>k__BackingField: 10
-  <MovementSpeed>k__BackingField: 1
---- !u!114 &8916276821653567525
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9046841340612204629}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e68d0ded1a3b45e5ae9012c83f3c5c14, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  networkAnimator: {fileID: 6897509941174227141}
-  bossStateMachine: {fileID: 8393580528185546666}
-  isSkillActive:
-    m_InternalValue: 0
-  skillsPrefab:
-  - {fileID: 1397753698253553316}
-  - {fileID: 1771366020826701858}
-  currentSkillIndex: 0
---- !u!114 &8942110842192541058
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9046841340612204629}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 64f4abaa8e824891ab7b822349041281, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  initStatData: {fileID: 11400000, guid: 154d898a10ed87b40a8798aad16920f8, type: 2}
-  MaxHealth:
-    m_InternalValue: 0
-  Atk:
-    m_InternalValue: 0
-  Def:
-    m_InternalValue: 0
-  AtkSpeed:
-    m_InternalValue: 0
-  Speed:
-    m_InternalValue: 0
-  CurrentHealth:
-    m_InternalValue: 0
 --- !u!1 &9092185226743793555 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -8115396509587922281, guid: fc3956512bc7215439fff8c79e83ed8c,
@@ -3769,5 +3786,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8227c1b3bba80bd4bb97820e54d5e29d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  OpaqueMaterial: {fileID: 2100000, guid: 1a1fdf56d2fc6e94c97c29ac9da5195e, type: 2}
-  TransparentMaterial: {fileID: 2100000, guid: 7e273c956083628448c38b30860d7bb2, type: 2}
+  OpaqueMaterial:
+  - {fileID: 2100000, guid: 1a1fdf56d2fc6e94c97c29ac9da5195e, type: 2}
+  TransparentMaterial:
+  - {fileID: 2100000, guid: 7e273c956083628448c38b30860d7bb2, type: 2}
