@@ -34,6 +34,7 @@ public class PlayerController : NetworkBehaviour
     private GameObject _moveIndicator;
     private Object_Base _objectBase;
     private CharacterStats _characterStats;
+    [SerializeField] private TransparencyController[] _transparencyControllers;
     
     // 네트워크 변수
     private NetworkVariable<bool> _isMoving = new NetworkVariable<bool>(false);
@@ -140,6 +141,9 @@ public class PlayerController : NetworkBehaviour
             // 캐릭터 데이터 로드
             LoadCharacterData();
         }
+        
+        // 투명도 설정
+        SetTransparency();
         
         // 네트워크 변수 콜백
         _isMoving.OnValueChanged += OnMovingChanged;
@@ -659,6 +663,24 @@ public class PlayerController : NetworkBehaviour
             if (_animator != null && !string.IsNullOrEmpty(_skills[newValue].animationTrigger))
             {
                 _animator.SetTrigger(_skills[newValue].animationTrigger);
+            }
+        }
+    }
+
+    private void SetTransparency()
+    {
+        if (IsOwner)
+        {
+            foreach (var transparencyController in _transparencyControllers)
+            {
+                transparencyController.SetToOpaque();
+            }
+        }
+        else
+        {
+            foreach (var transparencyController in _transparencyControllers)
+            {
+                transparencyController.SetToTransparent();
             }
         }
     }

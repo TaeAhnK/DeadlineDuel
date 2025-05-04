@@ -65,7 +65,8 @@ namespace Boss
                     
                 BossStats.Speed.OnValueChanged += OnSpeedChanged;
                 BossStats.OnDeath += OnDeathMessage;
-                // TODO : Subscribe OnWakeMessage to Wake
+
+                GamePlayManager.Instance.OnBossWake += OnWakeMessage;
             }
         }
 
@@ -79,7 +80,8 @@ namespace Boss
                 BossStats.Speed.OnValueChanged -= OnSpeedChanged;
                 BossStats.OnDeath -= OnDeathMessage;
             }
-            // TODO : Unsubscribe OnWakeMessage to Wake
+            
+            GamePlayManager.Instance.OnBossWake -= OnWakeMessage;
         }
 
         private void OnSpeedChanged(float prev, float next)
