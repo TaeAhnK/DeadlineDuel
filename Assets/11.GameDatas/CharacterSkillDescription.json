@@ -1,0 +1,30 @@
+{
+  "Cosmo": {
+    "skillNames": [
+      "Q Skill Name",
+      "W Skill Name",
+      "E Skill Name",
+      "R Skill Name"
+    ],
+    "skillDescriptions": [
+      "thrusts sword",
+      "raises a wall of wind",
+      "distance in the direction of the target enemy",
+      "slashing enemy with sword "
+    ]
+  },
+  "Ronald": {
+    "skillNames": [
+      "Q",
+      "W",
+      "E",
+      "R"
+    ],
+    "skillDescriptions": [
+      "Q 설명",
+      "W 설명",
+      "E 설명",
+      "R 설명"
+    ]
+  }
+}
