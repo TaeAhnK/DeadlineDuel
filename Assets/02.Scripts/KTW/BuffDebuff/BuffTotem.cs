@@ -2,10 +2,11 @@ using DG.Tweening;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class BuffTotem : BuffableEntity
+public class BuffTotem : NetworkBehaviour
 {
     [Header("Buff Data")]
     public string buffName;
@@ -27,7 +28,7 @@ public class BuffTotem : BuffableEntity
     public int spawnIndex;
 
 
-    private BuffableEntity target;
+    private GameObject target;
     private BuffDebuff appliedBuff;
 
     private void Start() {
@@ -44,9 +45,7 @@ public class BuffTotem : BuffableEntity
     /// 토템에 데미지 적용 후 HP Bar에 반영. 잔여 HP 검사하고 파괴
     /// </summary>
     /// <param name="damage">주는 데미지</param>
-    public override void UpdateHP(float damage) {
-        base.UpdateHP(damage);
-
+    public void UpdateHP(float damage) {
         currentHP = Mathf.Max(currentHP - damage, 0);
         hpSlider.DOValue(currentHP / maxHP, UIHPBarAnimationDuration).SetEase(Ease.OutQuad);
 
@@ -74,18 +73,18 @@ public class BuffTotem : BuffableEntity
 
         // 해당 버프가 존재하지 않을 때 컴포넌트 추가
         if (!isApplied) {
-            appliedBuff = target.gameObject.AddComponent<BuffDebuff>();
+            appliedBuff = target.AddComponent<BuffDebuff>();
             appliedBuff.buffName = buffName;
             appliedBuff.buffType = buffType;
             appliedBuff.value = buffValue;
         }
     }
 
-    private BuffableEntity FindTarget() {
+    private GameObject FindTarget() {
         return targetType switch {
-            BuffTargetEnum.Player => FindPlayer(),
-            BuffTargetEnum.Enemy => FindEnemy(),
-            BuffTargetEnum.Boss => FindBoss(),
+            BuffTargetEnum.Player => FindPlayer().gameObject,
+            BuffTargetEnum.Enemy => FindEnemy().gameObject,
+            BuffTargetEnum.Boss => FindBoss().gameObject,
             _ => null
         };
     }
@@ -96,11 +95,11 @@ public class BuffTotem : BuffableEntity
         }
     }
 
-    private BuffableEntity FindPlayer() {
+    private Object_Base FindPlayer() {
         return GamePlayManager_t.Instance.GetPlayer();
     }
 
-    private BuffableEntity FindEnemy() {
+    private Object_Base FindEnemy() {
         return GamePlayManager_t.Instance.GetEnemy();
     }
 

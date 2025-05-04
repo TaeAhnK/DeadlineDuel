@@ -180,7 +180,6 @@ public class UI_BuffDebuff : MonoBehaviour
     private void SetBackgroundHeight(float height, float posY) {
         backgroundRect.sizeDelta = new Vector2(backgroundRect.sizeDelta.x, height);
         backgroundRect.anchoredPosition = new Vector2(backgroundRect.anchoredPosition.x, posY);
-        Debug.Log(posY);
     }
 
     private void SetCanvasGroupState(CanvasGroup canvasGroup, bool active) {

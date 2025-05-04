@@ -96,18 +96,18 @@
   ],
   "bossBuffs": [
     {
-      "name": "Attack -10",
+      "name": "Attack +10",
       "cost": 5,
       "target": "Boss",
       "type": "Attack",
-      "value": -10
+      "value": 10
     },
     {
-      "name": "Defense -20",
+      "name": "Defense +20",
       "cost": 5,
       "target": "Boss",
       "type": "Defense",
-      "value": -20
+      "value": 20
     }
   ]
 }
