@@ -1183,7 +1183,7 @@ GameObject:
   - component: {fileID: 969662574}
   - component: {fileID: 969662573}
   m_Layer: 0
-  m_Name: Cube
+  m_Name: Cube1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1550,7 +1550,7 @@ GameObject:
   - component: {fileID: 1447254031}
   - component: {fileID: 1447254030}
   m_Layer: 0
-  m_Name: Cube
+  m_Name: Cube2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1952,8 +1952,8 @@ MonoBehaviour:
   _playerPrefab: {fileID: 2642794170984474911, guid: 808c27993d7cfbd498bc935c237a6e93,
     type: 3}
   _spawnPoints:
-  - {fileID: 641206856}
-  - {fileID: 915076641}
+  - {fileID: 969662572}
+  - {fileID: 1447254029}
   _spawnPointsLocations: []
   _networkStartPositionPrefab: {fileID: 0}
 --- !u!1 &2040758740
