@@ -289,23 +289,6 @@ public class PlayerController : NetworkBehaviour
         }
     }
     
-    private IEnumerator GetQuadViewCameraWithDelay(float delay)
-    {
-        yield return new WaitForSeconds(delay);
-        
-        // 카메라 컨트롤러에서 카메라 참조 가져오기
-        if (_cameraController != null)
-        {
-            _playerCamera = _cameraController.GetCamera();
-        }
-        
-        // 카메라를 찾지 못한 경우 대체 방법
-        if (_playerCamera == null)
-        {
-            _playerCamera = Camera.main;
-        }
-    }
-    
     private void CreateMoveIndicator()
     {
         if (_moveIndicatorPrefab != null)
@@ -381,16 +364,38 @@ public class PlayerController : NetworkBehaviour
     
     private void UpdateMovementAnimation()
     {
-        if(!IsOwner) return;
-        
-        if (_navAgent == null || _animator == null) return;
+        if (!IsOwner) return;
     
-        // NavMesh Agent의 속도 확인
+        if (_navAgent == null || _animator == null) return;
+
+        // 속도 계산
         float speed = _navAgent.velocity.magnitude;
-        bool isRunning = speed > 0.1f;
+        bool isMoving = speed > 0.1f;
+    
+        // 속도 정규화 (0~1 범위)
+        float normalizedSpeed = Mathf.Clamp01(speed / _navAgent.speed);
     
         // 애니메이션 파라미터 설정
-        _animator.SetBool("IsRunning", isRunning);
+        _animator.SetFloat("Speed", normalizedSpeed);
+    
+        // 서버에 속도 동기화
+        SyncMovementServerRpc(normalizedSpeed, isMoving);
+    }
+    
+    [ServerRpc]
+    private void SyncMovementServerRpc(float speed, bool isMoving)
+    {
+        _isMoving.Value = isMoving; // 기존 네트워크 변수 업데이트
+        SyncSpeedClientRpc(speed);
+    }
+    
+    [ClientRpc]
+    private void SyncSpeedClientRpc(float speed)
+    {
+        if (!IsOwner && _animator != null)
+        {
+            _animator.SetFloat("Speed", speed);
+        }
     }
 
     private IEnumerator HideMoveIndicator(float delay)
@@ -439,15 +444,42 @@ public class PlayerController : NetworkBehaviour
         // 로컬에서 즉시 대시공격 애니메이션 재생
         if (_animator != null)
         {
-            // 콤보 상관없이 항상 DashAttack1 사용
             _animator.SetTrigger("DashAttack1");
         }
         
-        // 로컬 이펙트 즉시 실행
-        SpawnEffect(_dashAttackEffect, true);
+        // 대시어택 후 움직임을 완전히 멈추는 코루틴 시작
+        StartCoroutine(StopMovementAfterDashAttack(0.5f));
     
-        // 서버에 대시공격 요청
+        // 서버에 대시공격 요청 (AnimationEvent로 이펙트 실행)
         PerformDashAttackServerRpc(_currentCombo);
+    }
+    
+    private IEnumerator StopMovementAfterDashAttack(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+    
+        if (_navAgent != null)
+        {
+            _navAgent.ResetPath(); // 경로 초기화
+            _navAgent.velocity = Vector3.zero; // 속도 제거
+            _navAgent.isStopped = false; // 이동 가능 상태로 유지
+            
+            // 서버에 멈춤 상태 알림
+            StopMovementServerRpc();
+        }
+    }
+    
+    [ServerRpc]
+    private void StopMovementServerRpc()
+    {
+        if (_navAgent != null)
+        {
+            _navAgent.ResetPath();
+            _navAgent.velocity = Vector3.zero;
+        }
+    
+        // 이동 상태 업데이트 (false로 설정)
+        _isMoving.Value = false;
     }
     
     private void PerformNormalAttack()
@@ -462,14 +494,22 @@ public class PlayerController : NetworkBehaviour
             _animator.SetInteger("ComboCount", _currentCombo);
         }
         
-        // 로컬 이펙트 즉시 실행
-        if (_normalAttackEffects != null && _currentCombo > 0 && _currentCombo <= _normalAttackEffects.Length)
-        {
-            SpawnEffect(_normalAttackEffects[_currentCombo - 1], false, _currentCombo);
-        }
-        
         // 서버에 공격 요청
         PerformNormalAttackServerRpc(_currentCombo);
+    }
+    
+    // Animation Event로 호출될 메서드들
+    public void OnNormalAttackEffect(int comboIndex)
+    {
+        if (_normalAttackEffects != null && comboIndex > 0 && comboIndex <= _normalAttackEffects.Length)
+        {
+            SpawnEffect(_normalAttackEffects[comboIndex - 1], false, comboIndex);
+        }
+    }
+    
+    public void OnDashAttackEffect()
+    {
+        SpawnEffect(_dashAttackEffect, true);
     }
     
     private IEnumerator ResetAttackState(float delay)
@@ -484,6 +524,15 @@ public class PlayerController : NetworkBehaviour
         if (Time.time - _lastAttackTime > _comboWindow && _currentCombo > 0)
         {
             ResetCombo();
+        }
+        
+        // 4콤보 완료 후 강제 초기화
+        else if (_currentCombo >= _maxCombo)
+        {
+            if (Time.time - _lastAttackTime > 0.5f) // 4콤보 애니메이션 충분히 재생 후
+            {
+                _currentCombo = 0; // 다음 클릭 시 1콤보부터 시작하도록
+            }
         }
     }
     
@@ -506,7 +555,7 @@ public class PlayerController : NetworkBehaviour
         PerformAttackLogic(comboIndex, isDashAttack: true);
         
         // 모든 클라이언트에 이펙트 표시 명령
-        SpawnAttackEffectClientRpc(comboIndex, true);
+        TriggerAttackEffectClientRpc(comboIndex, true); 
     }
     
     [ServerRpc]
@@ -514,8 +563,24 @@ public class PlayerController : NetworkBehaviour
     {
         PerformAttackLogic(comboIndex, isDashAttack: false);
         
-        // 모든 클라이언트에 이펙트 표시 명령
-        SpawnAttackEffectClientRpc(comboIndex, false);
+        // 모든 리모트 클라이언트에 애니메이션 이벤트 타이밍 전달
+        TriggerAttackEffectClientRpc(comboIndex, false);
+    }
+    
+    [ClientRpc]
+    private void TriggerAttackEffectClientRpc(int comboIndex, bool isDashAttack)
+    {
+        if (IsOwner) return; // 로컬 플레이어는 애니메이션 이벤트로 처리
+    
+        // 리모트 클라이언트에서도 애니메이션 이벤트 트리거
+        if (isDashAttack)
+        {
+            OnDashAttackEffect();
+        }
+        else
+        {
+            OnNormalAttackEffect(comboIndex);
+        }
     }
     
     private void PerformAttackLogic(int comboIndex, bool isDashAttack)
@@ -542,25 +607,6 @@ public class PlayerController : NetworkBehaviour
         }
         
         StartCoroutine(ResetAttackState(0.3f));
-    }
-    
-    [ClientRpc]
-    private void SpawnAttackEffectClientRpc(int comboIndex, bool isDashAttack)
-    {
-        // 로컬 클라이언트는 이미 이펙트를 실행했으므로 건너뛴다
-        if (IsOwner) return;
-        
-        if (isDashAttack)
-        {
-            SpawnEffect(_dashAttackEffect, true);
-        }
-        else
-        {
-            if (_normalAttackEffects != null && comboIndex > 0 && comboIndex <= _normalAttackEffects.Length)
-            {
-                SpawnEffect(_normalAttackEffects[comboIndex - 1], false, comboIndex);
-            }
-        }
     }
     
     private void SpawnEffect(GameObject effectPrefab, bool isDashAttack = false, int comboIndex = 0)

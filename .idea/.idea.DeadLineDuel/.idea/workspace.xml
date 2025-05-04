@@ -6,11 +6,15 @@
   <component name="ChangeListManager">
     <list default="true" id="1ef3ec2e-6ecc-4479-badc-e18c7073aaca" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.DeadLineDuel/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.DeadLineDuel/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Data/CharacterStats.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Data/CharacterStats.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Object/Object_Base.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Object/Object_Base.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Player/PlayerController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Player/PlayerController.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/03.Prefabs/Player.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/03.Prefabs/Player.prefab" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/06.Models/Material.003.mat" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/06.Models/Material.003.mat" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/08.Animations/Player/Attack/NormalAttack1Anim.controller" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/08.Animations/Player/Attack/NormalAttack1Anim.controller.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/08.Animations/Player/Attack/NormalAttack2Anim.controller" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/08.Animations/Player/Attack/NormalAttack2Anim.controller.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/08.Animations/Player/Attack/NormalAttack3Anim.controller" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/08.Animations/Player/Attack/NormalAttack3Anim.controller.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/08.Animations/Player/Attack/NormalAttack4Anim.controller" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/08.Animations/Player/Attack/NormalAttack4Anim.controller.meta" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/08.Animations/Player/Cosmo.controller" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/08.Animations/Player/Cosmo.controller" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/TextMesh Pro/Resources/Fonts &amp; Materials/LiberationSans SDF - Fallback.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/TextMesh Pro/Resources/Fonts &amp; Materials/LiberationSans SDF - Fallback.asset" afterDir="false" />
     </list>
