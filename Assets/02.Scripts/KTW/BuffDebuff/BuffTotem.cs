@@ -5,7 +5,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class BuffTotem : Object_Base
+public class BuffTotem : BuffableEntity
 {
     [Header("Buff Data")]
     public string buffName;
@@ -27,7 +27,7 @@ public class BuffTotem : Object_Base
     public int spawnIndex;
 
 
-    private Object_Base target;
+    private BuffableEntity target;
     private BuffDebuff appliedBuff;
 
     private void Start() {
@@ -81,7 +81,7 @@ public class BuffTotem : Object_Base
         }
     }
 
-    private Object_Base FindTarget() {
+    private BuffableEntity FindTarget() {
         return targetType switch {
             BuffTargetEnum.Player => FindPlayer(),
             BuffTargetEnum.Enemy => FindEnemy(),
@@ -96,15 +96,15 @@ public class BuffTotem : Object_Base
         }
     }
 
-    private Object_Base FindPlayer() {
+    private BuffableEntity FindPlayer() {
         return GamePlayManager_t.Instance.GetPlayer();
     }
 
-    private Object_Base FindEnemy() {
+    private BuffableEntity FindEnemy() {
         return GamePlayManager_t.Instance.GetEnemy();
     }
 
-    private Object_Base FindBoss() {
+    private BuffableEntity FindBoss() {
         return GamePlayManager_t.Instance.GetEnemyBoss();
     }
 
