@@ -1,9 +1,6 @@
-using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.Tracing;
 using Unity.Netcode;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class TargetManager : NetworkBehaviour
 {
@@ -11,11 +8,6 @@ public class TargetManager : NetworkBehaviour
     public static TargetManager Instance => _instance;
 
     [Header("Object")]
-    [SerializeField] private BuffableEntity boss1;
-    [SerializeField] private BuffableEntity boss2;
-    [SerializeField] private Object_Base player1;
-    [SerializeField] private Object_Base player2;
-
     private Dictionary<ulong, ulong> userIdDict = new();
     private Dictionary<ulong, NetworkObject> playerObjectDict = new();
     private Dictionary<ulong, NetworkObject> bossObjectDict = new();
@@ -30,17 +22,17 @@ public class TargetManager : NetworkBehaviour
             Destroy(gameObject);
             return;
         }
-
     }
 
     public void SetUserId(ulong id1, ulong id2) {
         userIdDict[id1] = id2;
+        userIdDict[id2] = id1;
     }
 
     /// <summary>
     /// 보스를 할당
     /// </summary>
-    public void SetBossDataOnManager(NetworkObject b, ulong userId) {
+    public void SetBossDataOnManager(ulong userId, NetworkObject b) {
         bossObjectDict[userId] = b;
     }
 
@@ -51,7 +43,7 @@ public class TargetManager : NetworkBehaviour
         return bossObjectDict[userIdDict[userId]];
     }
 
-    public void SetPlayerDataOnManager(NetworkObject p, ulong userId) {
+    public void SetPlayerDataOnManager(ulong userId, NetworkObject p) {
         playerObjectDict[userId] = p;
     }
 
@@ -68,4 +60,38 @@ public class TargetManager : NetworkBehaviour
     public NetworkObject GetEnemy(ulong userId) {
         return playerObjectDict[userIdDict[userId]];
     }
+
+    // GamePlayManager.cs에 아래의 코드 작성
+    /*
+     
+    OnClientConnected 메서드에
+    // 두 번째 플레이어가 연결되면 상호 매핑
+    if (NetworkManager.ConnectedClients.Count == 1) return;
+    var clients = NetworkManager.ConnectedClients.Keys;
+
+    if (clients
+    foreach (var existingClient in clients)
+    {
+        if (existingClient == clientId) continue;
+        
+        // 상호 opponent 설정
+        _clientOpponentMap[existingClient] = clientId;
+        _clientOpponentMap[clientId] = existingClient;
+        
+        // 클라이언트에 ID 전송
+        SetClientIDRpc(existingClient, clientId);
+        break;
+    }
+
+    [ClientRpc]
+    private void SetClientIDRpc(ulong yourId, ulong opponentId)
+    {
+        if (NetworkManager.Singleton.LocalClientId == yourId){
+            TargetManager.Instance.SetUserId(yourId, opponentId);
+        }
+    }
+
+    SpawnPlayerServerRpc()메서드 아래에 아래 추가
+    TargetManager.Instance.SetPlayerDataOnManager(clientId, networkObject);
+     */
 }
