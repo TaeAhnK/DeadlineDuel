@@ -10,22 +10,9 @@ public class GameResultManager : MonoBehaviour
     [Header("UI Assign")]
     [SerializeField] private UI_GameResult _uiGameResult;
 
-    // ����� �ܺο��� �ѹ��� �����ϴ°� ��������?
-    [Header("Data Key from PlayerPrefs")]
-    [SerializeField] private string _winnerKey = "WinnerPlayerId";
-    [SerializeField] private string _player1IdKey = "Player1Id";
-    [SerializeField] private string _player2IdKey = "Player2Id";
-    [SerializeField] private string _player1TimeKey = "Player1Time";
-    [SerializeField] private string _player2TimeKey = "Player2Time";
-    [SerializeField] private string _player1BossHPKey = "Player1BossHP";
-    [SerializeField] private string _player2BossHPKey = "Player2BossHP";
-    [SerializeField] private string _player1DeathsKey = "Player1Deaths";
-    [SerializeField] private string _player2DeathsKey = "Player2Deaths";
-
-    private string _localPlayerId; // ���� Ŭ���̾�Ʈ�� �÷��̾� ID 
+    private string _localPlayerId;
 
     private void Awake() {
-        // �̱��� ���� ����
         if (_instance == null) {
             _instance = this;
             DontDestroyOnLoad(gameObject);
@@ -36,33 +23,30 @@ public class GameResultManager : MonoBehaviour
         }
 
         InitializePlayerIdentity();
-        // TODO ������ �ε�
-        // LoadAndDisplayResults();
-        _uiGameResult.UpdateResultInfoFromServer(
-            "test", "test2",
-            "player1ID", 30, 30, 30,
-            "2dddd", 50, 50, 100
-        );
+        LoadAndDisplayResults();
+        //_uiGameResult.UpdateResultInfoFromServer(
+        //    "test", "test2",
+        //    "player1ID", 30, 30, 30,
+        //    "2dddd", 50, 50, 100
+        //);
     }
 
     private void InitializePlayerIdentity() {
-        // TODO �̰� �ٸ� ������� �����;�
-        _localPlayerId = PlayerPrefs.GetString("LocalPlayerId", "Player");
+        _localPlayerId = PlayerPrefs.GetString(GameResultKeys.LocalPlayerIdKey);
     }
 
     private void LoadAndDisplayResults() {
-        // ��� ������ �ε�
-        string winnerId = PlayerPrefs.GetString(_winnerKey, "Player");
+        string winnerId = PlayerPrefs.GetString(GameResultKeys.WinnerKey);
 
-        string player1Id = PlayerPrefs.GetString(_player1IdKey, "Player 1");
-        int player1Time = PlayerPrefs.GetInt(_player1TimeKey, 0);
-        float player1BossHP = PlayerPrefs.GetFloat(_player1BossHPKey, 0f);
-        int player1Deaths = PlayerPrefs.GetInt(_player1DeathsKey, 0);
+        string player1Id = PlayerPrefs.GetString(GameResultKeys.Player1IdKey);
+        int player1Time = PlayerPrefs.GetInt(GameResultKeys.Player1TimeKey);
+        float player1BossHP = PlayerPrefs.GetFloat(GameResultKeys.Player1BossHPKey);
+        int player1Deaths = PlayerPrefs.GetInt(GameResultKeys.Player1DeathsKey);
 
-        string player2Id = PlayerPrefs.GetString(_player2IdKey, "Player 2");
-        int player2Time = PlayerPrefs.GetInt(_player2TimeKey, 0);
-        float player2BossHP = PlayerPrefs.GetFloat(_player2BossHPKey, 0f);
-        int player2Deaths = PlayerPrefs.GetInt(_player2DeathsKey, 0);
+        string player2Id = PlayerPrefs.GetString(GameResultKeys.Player2IdKey);
+        int player2Time = PlayerPrefs.GetInt(GameResultKeys.Player2TimeKey);
+        float player2BossHP = PlayerPrefs.GetFloat(GameResultKeys.Player2BossHPKey);
+        int player2Deaths = PlayerPrefs.GetInt(GameResultKeys.Player2DeathsKey);
 
         bool isLocalWinner = (winnerId == _localPlayerId);
 
@@ -75,33 +59,16 @@ public class GameResultManager : MonoBehaviour
         ClearSavedData();
     }
 
-    // �����ߴ� ������ ����
     private void ClearSavedData() {
-        PlayerPrefs.DeleteKey(_winnerKey);
-        PlayerPrefs.DeleteKey(_player1IdKey);
-        PlayerPrefs.DeleteKey(_player2IdKey);
-        PlayerPrefs.DeleteKey(_player1TimeKey);
-        PlayerPrefs.DeleteKey(_player2TimeKey);
-        PlayerPrefs.DeleteKey(_player1BossHPKey);
-        PlayerPrefs.DeleteKey(_player2BossHPKey);
-        PlayerPrefs.DeleteKey(_player1DeathsKey);
-        PlayerPrefs.DeleteKey(_player2DeathsKey);
-    }
-
-    // TODO ���� ������ �Ʒ��� ���� �޼��� �ۼ�
-    private void SaveGameResults(int winnerId) {
-        PlayerPrefs.SetString("WinnerPlayerId", "Winner");
-
-        PlayerPrefs.SetString("Player1Id", "Player 1");
-        PlayerPrefs.SetInt("Player1Time", 350);
-        PlayerPrefs.SetFloat("Player1BossHP", 35.5f);
-        PlayerPrefs.SetInt("Player1Deaths", 2);
-
-        PlayerPrefs.SetString("Player2Id", "Player 2");
-        PlayerPrefs.SetInt("Player2Time", 280);
-        PlayerPrefs.SetFloat("Player2BossHP", 80.2f);
-        PlayerPrefs.SetInt("Player2Deaths", 4);
-
-        PlayerPrefs.Save();
+        PlayerPrefs.DeleteKey(GameResultKeys.LocalPlayerIdKey);
+        PlayerPrefs.DeleteKey(GameResultKeys.WinnerKey);
+        PlayerPrefs.DeleteKey(GameResultKeys.Player1IdKey);
+        PlayerPrefs.DeleteKey(GameResultKeys.Player2IdKey);
+        PlayerPrefs.DeleteKey(GameResultKeys.Player1TimeKey);
+        PlayerPrefs.DeleteKey(GameResultKeys.Player2TimeKey);
+        PlayerPrefs.DeleteKey(GameResultKeys.Player1BossHPKey);
+        PlayerPrefs.DeleteKey(GameResultKeys.Player2BossHPKey);
+        PlayerPrefs.DeleteKey(GameResultKeys.Player1DeathsKey);
+        PlayerPrefs.DeleteKey(GameResultKeys.Player2DeathsKey);
     }
 }

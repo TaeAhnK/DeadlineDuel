@@ -93,5 +93,7 @@ public class TargetManager : NetworkBehaviour
 
     SpawnPlayerServerRpc()메서드 아래에 아래 추가
     TargetManager.Instance.SetPlayerDataOnManager(clientId, networkObject);
+    SpawnBoss()메서드 아래에 추가
+    TargetManager.Instance.SetBossDataOnManager(NetworkManager.Singleton.LocalClientId)
      */
 }
