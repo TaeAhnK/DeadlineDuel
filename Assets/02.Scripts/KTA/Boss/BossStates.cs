@@ -1,6 +1,4 @@
-using Unity.Netcode;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 namespace Boss
 {
@@ -17,64 +15,108 @@ namespace Boss
     public class BossIdleState : BossBaseState
     {
         private readonly int speedHash = Animator.StringToHash("Speed");
+        private readonly int turnSpeedHash = Animator.StringToHash("TurnSpeed");
         private const float AnimatorDampTime = 0.1f;
         private const float IdleDuration = 1f;
         private float stateEnterTime;
-        private Quaternion prevRotation;
+        private Quaternion lastRotation;
+        private float currentTurnSpeed;
         public BossIdleState(BossStateMachine stateMachine) : base(stateMachine) { }
 
         public override void Enter()
         {
-            if (!StateMachine.IsHost) return;
+            if (!StateMachine.IsServer) return; // Only on Server
             
             Debug.Log("[Boss] Idle State");
+
             stateEnterTime = Time.time;
-            prevRotation = StateMachine.transform.rotation;
+            lastRotation = StateMachine.transform.rotation;
         }
 
         public override void Tick(float deltaTime)
         {
-            if (!StateMachine.IsHost) return; // Only on host
+            if (!StateMachine.IsServer) return; // Only on Server
             
             SetAnimatorFloat(speedHash, 0f, AnimatorDampTime, deltaTime);
-
+            
             TurnToPlayer();
+            SetAnimatorFloat(turnSpeedHash, CalcTurnSpeed(), AnimatorDampTime, deltaTime);
             
-            if (!IsPlayerInRange()) // and Player Not Dead
+            // Not In Range
+            if (!IsPlayerInRange()) // TODO : and Player Not Dead + TargetPlayer not null
             {
-                StateMachine.RequestStateChangeServerRpc((byte) BossState.Chase);
+                SetAnimatorFloat(turnSpeedHash, 0f, AnimatorDampTime, deltaTime);
+                StateMachine.ChangeState((byte) BossState.Chase);
             }
             
-            if (Time.time - stateEnterTime < IdleDuration)
-            {
-                return;
-            }
+            // Idle Wait Time
+            if (Time.time - stateEnterTime < IdleDuration) return;
             
+            // Can Attack
             if (IsPlayerInRange()) // and Player Not Dead
             {
-                StateMachine.RequestStateChangeServerRpc((byte) BossState.Attack);
+                SetAnimatorFloat(turnSpeedHash, 0f, AnimatorDampTime, deltaTime);
+                StateMachine.ChangeState((byte) BossState.Attack);
             }
         }
 
         public override void Exit() { }
+
+        private float CalcTurnSpeed()
+        {
+            Quaternion deltaRotation = StateMachine.transform.rotation * Quaternion.Inverse(lastRotation);
+            
+            deltaRotation.ToAngleAxis(out float angleInDegrees, out Vector3 _);
+            
+            if (angleInDegrees > 180f)
+                angleInDegrees = 360f - angleInDegrees;
+
+            currentTurnSpeed = angleInDegrees / Time.deltaTime;
+
+            lastRotation = StateMachine.transform.rotation;
+
+            return Mathf.Clamp01(currentTurnSpeed / 120f);
+        }
+        
     }
 
     public class BossWakeState : BossBaseState
     {
-        private int wakeTriggerHash = Animator.StringToHash("Wake");
-        public BossWakeState(BossStateMachine stateMachine) : base(stateMachine) { }
+        private readonly int wakeTriggerHash = Animator.StringToHash("Wake");
+        private float wakeAnimationLength = 1.29f;
+        private float stateEnterTime;
+        
+        public BossWakeState(BossStateMachine stateMachine) : base(stateMachine)
+        {
+            // Get Wake Animation Length
+            if (!StateMachine.IsServer) return;
+            
+            AnimationClip[] clips = StateMachine.NetworkAnimator.Animator.runtimeAnimatorController.animationClips;
+            foreach (var clip in clips)
+            {
+                if (clip.name == "Wake")
+                {
+                    wakeAnimationLength = clip.length;
+                    break;
+                }
+            }
+        }
 
         public override void Enter()
         {
+            if (!StateMachine.IsServer) return; // Only on Server
             SetAnimatorTrigger(wakeTriggerHash);
+            stateEnterTime = Time.time;
         }
 
-        public override void Tick(float deltaTime) { }
-
-        public override void OnAnimationEnd()
+        public override void Tick(float deltaTime)
         {
-            if (!StateMachine.IsHost) return;
-            StateMachine.RequestStateChangeServerRpc((byte) BossState.Idle);
+            if (!StateMachine.IsServer) return; // Only on Server
+
+            if (Time.time - stateEnterTime > wakeAnimationLength)   // Finished Animation
+            {
+                StateMachine.ChangeState((byte) BossState.Idle);
+            }
         }
         
         public override void Exit() { }
@@ -88,7 +130,7 @@ namespace Boss
 
         public override void Enter()
         {
-            if (!StateMachine.IsHost) return;
+            if (!StateMachine.IsServer) return; // Only on Server
             
             Debug.Log("[Boss] Chase State");
             StateMachine.NavMeshAgent.speed = StateMachine.MovementSpeed;
@@ -96,11 +138,11 @@ namespace Boss
         
         public override void Tick(float deltaTime)
         {
-            if (!StateMachine.IsHost) return;
+            if (!StateMachine.IsServer) return; // Only on Server
 
             if (IsPlayerInRange())
             {
-                StateMachine.RequestStateChangeServerRpc((byte) BossState.Idle);
+                StateMachine.ChangeState((byte) BossState.Idle);
                 return;
             }
 
@@ -113,17 +155,18 @@ namespace Boss
 
         public override void Exit()
         {
-            if (!StateMachine.IsHost) return;
+            if (!StateMachine.IsServer) return; // Only on Server
 
             StateMachine.NavMeshAgent.ResetPath();
             StateMachine.NavMeshAgent.velocity = Vector3.zero;
             
+            // Adjust Transform by Force
             StateMachine.NetworkTransform.Teleport(StateMachine.transform.position, StateMachine.transform.rotation, StateMachine.transform.localScale);
         }
 
         private void MoveToPlayer(float deltaTime)
         {
-            if (!StateMachine.IsHost) return;
+            if (!StateMachine.IsServer) return; // Only on Server
             
             if (StateMachine.BossCharacter.GetTargetPlayer(out Transform targetPlayer))
             {
@@ -138,18 +181,18 @@ namespace Boss
 
         public override void Enter()
         {
-            if (!StateMachine.IsHost) return;
+            if (!StateMachine.IsServer) return; // Only on Server
             Debug.Log("[Boss] Attack State");
-            StateMachine.BossSkillController.ActivateSkillServerRpc();
+            StateMachine.BossSkillController.ActivateSkill(); // TODO: -> ActivateSkill
         }
         
         public override void Tick(float deltaTime)
         {
-            if (!StateMachine.IsHost) return;
+            if (!StateMachine.IsServer) return; // Only on Server
             
-            if (!StateMachine.BossSkillController.IsSkillActive.Value)
+            if (!StateMachine.BossSkillController.isSkillActive.Value)
             {
-                StateMachine.RequestStateChangeServerRpc((byte) BossState.Idle);
+                StateMachine.ChangeState((byte) BossState.Idle);
             }
         }
 
@@ -158,12 +201,14 @@ namespace Boss
 
     public class BossDeathState : BossBaseState
     {
+        private readonly int deathHash = Animator.StringToHash("Death");
         public BossDeathState(BossStateMachine stateMachine) : base(stateMachine) { }
 
         public override void Enter()
         {
-            if (!StateMachine.IsHost) return;
-            throw new System.NotImplementedException();
+            if (!StateMachine.IsServer) return; // Only on Server
+            Debug.Log("[Boss] Death State");
+            SetAnimatorTrigger(deathHash);
         }
 
         public override void Tick(float deltaTime) { }
