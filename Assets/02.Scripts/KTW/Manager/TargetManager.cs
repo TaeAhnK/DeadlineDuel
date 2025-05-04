@@ -84,10 +84,10 @@ public class TargetManager : NetworkBehaviour
     }
 
     [ClientRpc]
-    private void SetClientIDRpc(ulong yourId, ulong opponentId)
+    private void SetClientIDRpc(ulong myId, ulong enemyId)
     {
-        if (NetworkManager.Singleton.LocalClientId == yourId){
-            TargetManager.Instance.SetUserId(yourId, opponentId);
+        if (NetworkManager.Singleton.LocalClientId == myId){
+            TargetManager.Instance.SetUserId(myId, enemyId);
         }
     }
 
