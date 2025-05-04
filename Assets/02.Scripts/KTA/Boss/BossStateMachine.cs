@@ -8,13 +8,9 @@ namespace Boss
 {
     public class BossStateMachine : StateMachine.StateMachine
     {
-        [field: Header("Dependencies")]
-        [field: SerializeField] public BossCharacter BossCharacter { get; set; }
-        [field: SerializeField] public NetworkAnimator NetworkAnimator { get; private set; }
-        [field: SerializeField] public NetworkTransform NetworkTransform { get; private set; } 
-        [field: SerializeField] public NavMeshAgent NavMeshAgent { get; private set; }
-        [field: SerializeField] public BossSkillController BossSkillController { get; private set; }
-        [field: SerializeField] public BossStats BossStats { get; private set; }
+        [field: Header("Dependencies")] 
+        [field: SerializeField] public BossCore BossCore { get; set; }
+
         
         [field: Header("Boss Settings")] // TODO : Move to Boss Stat
         [field: SerializeField] public float PlayerDetectRange { get; private set; } = 10f;
@@ -53,18 +49,18 @@ namespace Boss
             StateDict.Add((byte) BossState.Sleep, SleepState);
             
             // Set Network Transform
-            NetworkTransform.Interpolate = true;
-            NetworkTransform.PositionThreshold = 0.1f;
-            NetworkTransform.RotAngleThreshold = 3f;
-            NetworkTransform.ScaleThreshold = 0.1f;
+            BossCore.NetworkTransform.Interpolate = true;
+            BossCore.NetworkTransform.PositionThreshold = 0.1f;
+            BossCore.NetworkTransform.RotAngleThreshold = 3f;
+            BossCore.NetworkTransform.ScaleThreshold = 0.1f;
             
             if (IsServer)
             {
-                NavMeshAgent.updatePosition = true;
-                NavMeshAgent.updateRotation = true;
+                BossCore.NavMeshAgent.updatePosition = true;
+                BossCore.NavMeshAgent.updateRotation = true;
                     
-                BossStats.Speed.OnValueChanged += OnSpeedChanged;
-                BossStats.OnDeath += OnDeathMessage;
+                BossCore.BossStats.Speed.OnValueChanged += OnSpeedChanged;
+                BossCore.BossStats.OnDeath += OnDeathMessage;
 
                 GamePlayManager.Instance.OnBossWake += OnWakeMessage;
             }
@@ -75,10 +71,10 @@ namespace Boss
             base.OnNetworkDespawn();
             if (!IsServer) return;  // Server Code
 
-            if (BossStats)
+            if (BossCore.BossStats)
             {
-                BossStats.Speed.OnValueChanged -= OnSpeedChanged;
-                BossStats.OnDeath -= OnDeathMessage;
+                BossCore.BossStats.Speed.OnValueChanged -= OnSpeedChanged;
+                BossCore.BossStats.OnDeath -= OnDeathMessage;
             }
             
             GamePlayManager.Instance.OnBossWake -= OnWakeMessage;
@@ -87,7 +83,7 @@ namespace Boss
         private void OnSpeedChanged(float prev, float next)
         {
             if (!IsServer) return; // Server Code
-            NavMeshAgent.speed = next;
+            BossCore.NavMeshAgent.speed = next;
         }
         
         private void OnDeathMessage()

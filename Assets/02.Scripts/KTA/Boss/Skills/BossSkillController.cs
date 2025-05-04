@@ -8,11 +8,11 @@ namespace Boss.Skills
 {
     public class BossSkillController : NetworkBehaviour
     {
-        [SerializeField] private NetworkAnimator networkAnimator;
-        [SerializeField] private BossStateMachine bossStateMachine;
+        [SerializeField] private BossCore bossCore;
+        
         public NetworkVariable<bool> isSkillActive = new (writePerm: NetworkVariableWritePermission.Server);
 
-        [SerializeField] private List<BossSkill> skillsPrefab =  new List<BossSkill>();
+        [SerializeField] private List<BossSkill> skillsPrefab = new List<BossSkill>();
         [SerializeField] private byte currentSkillIndex;
         private BossSkill currentSkill;
 
@@ -44,7 +44,7 @@ namespace Boss.Skills
             // Start Skill
             isSkillActive.Value = true;
             currentSkill.ActivateSkill(gameObject.transform.position, gameObject.transform.position); // TODO : Get TargetPlayer
-            networkAnimator.SetTrigger(currentSkill.BossSkillHash); // Play Skill Animation
+            bossCore.NetworkAnimator.SetTrigger(currentSkill.BossSkillHash); // Play Skill Animation
             
             // Play Indicator
             yield return new WaitForSeconds(currentSkill.IndicatorTime);
@@ -53,7 +53,7 @@ namespace Boss.Skills
             // Play Effect and Damage Collider
             yield return new WaitForSeconds(currentSkill.EffectTime);
             currentSkill.ActivateSkillEffectClientRpc();
-            currentSkill.ActivateDamageCollider(bossStateMachine.BossStats.Atk.Value);
+            currentSkill.ActivateDamageCollider(bossCore.BossStats.Atk.Value);
         }
 
         private IEnumerator EndSkillAnimation(float waitTime)
