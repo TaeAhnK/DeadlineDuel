@@ -10,39 +10,38 @@ namespace StateMachine
         [SerializeField] private NetworkVariable<byte> currentStateID =
             new(writePerm: NetworkVariableWritePermission.Server, readPerm: NetworkVariableReadPermission.Everyone);
         
-        protected State CurrentState;
+        private State currentState;
         protected Dictionary<byte, State> StateDict = new Dictionary<byte, State>();
         
         protected virtual void Update()
         {
-            if (!IsHost) return; // Only Update by host
+            if (!IsServer) return; // Only Update by Sever
             
-            CurrentState?.Tick(Time.deltaTime);
+            currentState?.Tick(Time.deltaTime);
         }
-
-        [ServerRpc(RequireOwnership = false)]
-        public void RequestStateChangeServerRpc(byte newStateID, ServerRpcParams param = default)
+        
+        public void ChangeState(byte newStateID)
         {
-            if (!IsHost) return; // Only Change State on Host
+            if (!IsServer) return; // Only Change State on Server
 
             if (StateDict.TryGetValue(newStateID, out State newState))
             {
-                CurrentState?.Exit();
-                CurrentState = newState;
+                currentState?.Exit();
+                currentState = newState;
                 currentStateID.Value = newStateID;
-                CurrentState?.Enter();
+                currentState?.Enter();
             }
         }
 
         public override void OnNetworkSpawn()
         {
-            currentStateID.OnValueChanged += (prev, next) =>
+            currentStateID.OnValueChanged += (prev, next) =>  // Sync Client State on currentStateID Update
             {
-                if (!IsHost && StateDict.TryGetValue(next, out State newState)) // Client
+                if (!IsServer && StateDict.TryGetValue(next, out State newState))
                 {
-                    CurrentState?.Exit();
-                    CurrentState = newState;
-                    CurrentState?.Enter();
+                    currentState?.Exit();
+                    currentState = newState;
+                    currentState?.Enter();
                 }
             };
         }

@@ -5,70 +5,58 @@ namespace Boss.Skills
 {
     public class BossSkill_Slash : BossSkill
     {
-        [field: SerializeField] private float radius;
+        [field: Header("Dependencies")]
         [field: SerializeField] private ParticleSystem hitParticle;
         [field: SerializeField] private ParticleSystem skillEffectParticle;
-        
-        [ServerRpc]
-        public override void PlayIndicatorServerRpc(Vector3 BossPos, Vector3 TargetPos)
+
+        [field: Header("Skill Data")]
+        [field: SerializeField] private float radius;
+
+        [ClientRpc]
+        public override void ActivateIndicatorClientRpc()
         {
-            this.BossPos = BossPos;
-            this.TargetPos = TargetPos;
-            PlayIndicatorClient(BossPos, TargetPos);
-        }
-        
-        public override void PlayIndicatorClient(Vector3 BossPos, Vector3 TargetPos)
-        {
-            this.BossPos = BossPos;
-            this.TargetPos = TargetPos;
-            gameObject.transform.position = BossPos;
-            SkillIndicator.ActivateIndicator(BossPos, 180f, 0.5f);
+            if (!bossCharacter.IsClientBoss) return;
+            SkillIndicator.ActivateIndicator(BossPos.Value, 180f, 0.5f, 0f);
         }
 
-        [ServerRpc]
-        public override void PlayColliderServerRpc()
+        [ClientRpc]
+        public override void ActivateSkillEffectClientRpc()
+        {
+            if (!bossCharacter.IsClientBoss) return;
+            skillEffectParticle.Play();
+        }
+
+        public override void ActivateDamageCollider(float bossAtk)
         {
             int layerMask = LayerMask.GetMask("Player");
-            var size = Physics.OverlapSphereNonAlloc(BossPos, radius, Colliders, layerMask);
+            var size = Physics.OverlapSphereNonAlloc(BossPos.Value, radius, Colliders, layerMask);
             
             Vector3 forward = transform.forward;
             
             if (size > 0)
             {
-                for  (int i = 0; i < size; i++)
+                for  (int i = 0; i < size; i++) // Do not use foreach on NonAlloc
                 {
-                    Vector3 dir = (Colliders[i].transform.position - BossPos).normalized;
+                    Vector3 dir = (Colliders[i].transform.position - BossPos.Value).normalized;
                     float angle = Vector3.Angle(forward, dir);
-                    if (angle <= 90f) // 180도(반원) 이내
+                    if (angle <= 90f) // half circle
                     {
                         Debug.Log("[Boss] Hit Object : " + Colliders[i].gameObject.name);
                         if (Colliders[i].TryGetComponent<IDamageable>(out var damageable))
                         {
-                            damageable.TakeDamageServerRpc(10);
-                            PlayHitEffectClientRpc(Colliders[i].bounds.center);
+                            damageable.TakeDamageServerRpc(bossAtk * damageCoeff);
                         }
                     }
                 }   
             }
         }
         
-        public override void PlayEffectClient()
-        {
-            skillEffectParticle.Play();
-        }
-
-        [ClientRpc]
-        private void PlayHitEffectClientRpc(Vector3 pos)
-        {
-            Instantiate(hitParticle, pos, Quaternion.identity);
-        }
-        
-        void OnDrawGizmos()
+        void OnDrawGizmosSelected()
         {
             Gizmos.color = Color.red;
-            Gizmos.DrawWireSphere(BossPos, radius);
+            Gizmos.DrawWireSphere(BossPos.Value, radius);
         
-            // 반원(180도) 외곽선 그리기 예시
+            // Draw Half Circle
             int segments = 32;
             float angleStep = 180f / segments;
             Vector3 forward = transform.forward;
@@ -78,8 +66,15 @@ namespace Boss.Skills
                 float angleB = -90f + angleStep * (i + 1);
                 Vector3 dirA = Quaternion.Euler(0, angleA, 0) * forward;
                 Vector3 dirB = Quaternion.Euler(0, angleB, 0) * forward;
-                Gizmos.DrawLine(BossPos + dirA * radius, BossPos + dirB * radius);
+                Gizmos.DrawLine(BossPos.Value + dirA * radius, BossPos.Value + dirB * radius);
             }
         }
+        
+        // [ClientRpc]
+        // private void PlayHitEffectClientRpc(Vector3 pos)
+        // {
+        //     Instantiate(hitParticle, pos, Quaternion.identity);
+        // }
+        //
     }
 }

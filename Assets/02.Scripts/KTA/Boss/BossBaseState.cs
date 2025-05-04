@@ -15,16 +15,16 @@ namespace Boss
 
         protected void Turn(Vector3 lookPos)
         {
-            if (!StateMachine.IsHost) return;
+            if (!StateMachine.IsServer) return; // Only On Server
             
             lookPos.y = 0;
-            // 현재 오브젝트의 방향
+            // Current Object Rotation
             Quaternion currentRotation = StateMachine.transform.rotation;
     
-            // 목표 방향
+            // Target Rotation
             Quaternion targetRotation = Quaternion.LookRotation(lookPos);
     
-            // 회전 속도 (초당 각도)
+            // Rotation Speed
             float rotationSpeed = 120.0f;
             
             StateMachine.transform.rotation = Quaternion.RotateTowards(currentRotation, targetRotation, rotationSpeed * Time.deltaTime);
@@ -32,26 +32,28 @@ namespace Boss
         
         protected void TurnToPlayer()
         {
+            if (!StateMachine.IsServer) return; // Only On Server
+            
             if (StateMachine.BossCharacter.GetTargetPlayer(out Transform targetPlayer))
             {
                 Turn(targetPlayer.position - StateMachine.transform.position);                
             }
         }
         
-        protected bool IsPlayerInRange()
+        protected bool IsPlayerInRange() // Use with IsServer Check and TargetPlayer != null Check
         {
             if (StateMachine.BossCharacter.GetTargetPlayer(out Transform targetPlayer))
             {
                 float distSqr = (targetPlayer.position - StateMachine.gameObject.transform.position).sqrMagnitude;
                 return distSqr <= StateMachine.PlayerDetectRange * StateMachine.PlayerDetectRange;
             }
-
+            
             return false;
         }
         
         protected void SetAnimatorFloat(int hash, float value, float animationDampTime, float deltaTime)
         {
-            if (!StateMachine.IsHost) return; // On Host
+            if (!StateMachine.IsServer) return; // On Only On Server
 
             if (Math.Abs(StateMachine.NetworkAnimator.Animator.GetFloat(hash) - value) > 0.1f)
             {
@@ -61,7 +63,7 @@ namespace Boss
 
         protected void SetAnimatorTrigger(int hash)
         {
-            if (!StateMachine.IsHost) return; // On Host
+            if (!StateMachine.IsServer) return; // On Only On Server
             
             StateMachine.NetworkAnimator.SetTrigger(hash);
         }

@@ -43,17 +43,17 @@ namespace Boss.Skills
             gameObject.transform.position = location;
         }
         
-        public void ActivateIndicator(Vector3 location, float angle, float seconds)
+        public void ActivateIndicator(Vector3 location, float angle, float seconds, float fillStart)
         {
             SetLocation(location);
             SetAngle(angle);
             On();
-            SetFill(seconds);
+            SetFill(seconds, fillStart);
         }
         
-        public void SetFill(float seconds)
+        public void SetFill(float seconds, float fillStart)
         {
-            StartCoroutine(IncreaseDuration(seconds));
+            StartCoroutine(IncreaseDuration(seconds, fillStart));
         }
 
         private void IndicatorComplete()
@@ -62,9 +62,9 @@ namespace Boss.Skills
             OnIndicatorComplete?.Invoke();
         }
         
-        private IEnumerator IncreaseDuration(float seconds)
+        private IEnumerator IncreaseDuration(float seconds, float fillStart)
         {
-            float elapsedTime = 0f;
+            float elapsedTime = fillStart;
             while (elapsedTime < seconds)
             {
                 _renderer.material.SetFloat(Duration, elapsedTime / seconds);

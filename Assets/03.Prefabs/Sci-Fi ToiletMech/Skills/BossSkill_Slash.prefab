@@ -9,7 +9,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4857017803793873871}
-  - component: {fileID: -2330262122686757176}
   - component: {fileID: 5878023240205214983}
   m_Layer: 0
   m_Name: BossSkill_Slash
@@ -35,27 +34,6 @@ Transform:
   - {fileID: 602499406652730849}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &-2330262122686757176
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6027292311791018609}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 0
-  InScenePlacedSourceGlobalObjectIdHash: 0
-  AlwaysReplicateAsRoot: 0
-  SynchronizeTransform: 1
-  ActiveSceneSynchronization: 0
-  SceneMigrationSynchronization: 1
-  SpawnWithObservers: 1
-  DontDestroyWithOwner: 0
-  AutoObjectParentSync: 1
 --- !u!114 &5878023240205214983
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -68,12 +46,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9cd382df9d7141b4bae5545dcb989cf7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  <BossSkillName>k__BackingField: BossSkill_Slash
   <SkillIndicator>k__BackingField: {fileID: 2704389321472000142}
-  radius: 10
+  <BossSkillName>k__BackingField: BossSkill_Slash
+  <IndicatorTime>k__BackingField: 0.4
+  <EffectTime>k__BackingField: 0.5
+  <SkillAnimationTime>k__BackingField: 1.2
   hitParticle: {fileID: 8868377322452534193, guid: b1dffe30644cda9419d15c359bcc227e,
     type: 3}
   skillEffectParticle: {fileID: 602499406652730848}
+  radius: 10
+  damageCoeff: 0
 --- !u!1001 &346139598661466723
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -6,13 +6,18 @@ namespace Stats.Boss
 {
     public class BossStats : NetworkBehaviour, IDamageable // Currently Does Nothing
     {
+        [field: Header("Dependencies")]
         [SerializeField] private BossInitStatData initStatData;
 
+        [field: Header("Stats")]
         public NetworkVariable<float> MaxHealth = new(writePerm: NetworkVariableWritePermission.Server);
         public NetworkVariable<float> Atk = new(writePerm: NetworkVariableWritePermission.Server);
         public NetworkVariable<float> Def = new(writePerm: NetworkVariableWritePermission.Server);
         public NetworkVariable<float> AtkSpeed = new(writePerm: NetworkVariableWritePermission.Server);
+        public NetworkVariable<float> Speed = new(writePerm: NetworkVariableWritePermission.Server);
         public NetworkVariable<float> CurrentHealth = new(writePerm: NetworkVariableWritePermission.Server);
+
+        public Action OnDeath;
         
         public bool IsDead => CurrentHealth.Value <= 0f;
 
@@ -24,6 +29,7 @@ namespace Stats.Boss
                 Atk.Value = initStatData.Atk;
                 Def.Value = initStatData.Def;
                 AtkSpeed.Value = initStatData.AtkSpeed;
+                Speed.Value = initStatData.Speed;
                 CurrentHealth.Value = initStatData.MaxHealth;
             }
         }
@@ -33,21 +39,26 @@ namespace Stats.Boss
         {
             if (IsDead) return;
             
+            // TODO : Add Def Calculation
             CurrentHealth.Value = Math.Max(0, CurrentHealth.Value - damage);
-            if (IsDead) DieServerRpc();
+            if (IsDead)
+            {
+                OnDeath?.Invoke();
+            }
         }
 
-        [ServerRpc]
-        private void DieServerRpc()
+        // TODO : Erase
+        public void KillBossTest()
         {
+            if (!IsServer) return;
+            if (IsDead) return;
             
+            CurrentHealth.Value = Math.Max(0, CurrentHealth.Value - 50000);
+            if (IsDead)
+            {
+                OnDeath?.Invoke();
+            }   
         }
-
-        [ClientRpc]
-        private void DieClientRpc()
-        {
-            
-        }
-
+        
     }
 }

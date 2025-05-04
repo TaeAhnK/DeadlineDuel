@@ -1,0 +1,57 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &6027292311791018609
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4857017803793873871}
+  - component: {fileID: 5878023240205214983}
+  m_Layer: 0
+  m_Name: BossSkill_ShootTarget
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4857017803793873871
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6027292311791018609}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.1, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5878023240205214983
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6027292311791018609}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9cd382df9d7141b4bae5545dcb989cf7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bossCharacter: {fileID: 0}
+  <SkillIndicator>k__BackingField: {fileID: 0}
+  <BossSkillName>k__BackingField: BossSkill_Slash
+  <IndicatorTime>k__BackingField: 0.4
+  <EffectTime>k__BackingField: 0.5
+  <SkillAnimationTime>k__BackingField: 1.2
+  damageCoeff: 0
+  hitParticle: {fileID: 8868377322452534193, guid: b1dffe30644cda9419d15c359bcc227e,
+    type: 3}
+  skillEffectParticle: {fileID: 0}
+  radius: 10
