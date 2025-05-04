@@ -9,9 +9,6 @@ using UnityEngine.UI;
 
 public class PlayerController : NetworkBehaviour
 {
-    [Header("카메라 설정")]
-    [SerializeField] private GameObject _cameraPrefab;
-    
     private QuadViewCinemachine _cameraController;
     private Camera _playerCamera;
     
@@ -72,8 +69,12 @@ public class PlayerController : NetworkBehaviour
         public bool isTargeted;
         public string animationTrigger;
     }
+
     public override void OnNetworkSpawn()
     {
+
+        Debug.Log($"[OnNetworkSpawn] IsOwner: {IsOwner}, OwnerClientId: {OwnerClientId}");
+
         base.OnNetworkSpawn();
         
         // 컴포넌트 참조 가져오기
@@ -82,6 +83,10 @@ public class PlayerController : NetworkBehaviour
         _objectBase = GetComponent<Object_Base>();
         _characterStats = GetComponent<CharacterStats>();
         
+        CreateMoveIndicator();
+        InitializeSkills();
+        LoadCharacterData();
+
         // NavMeshAgent 설정
         if (_navAgent != null && _characterStats != null)
         {
@@ -89,23 +94,16 @@ public class PlayerController : NetworkBehaviour
             _navAgent.angularSpeed = _rotationSpeed * 100;
             _navAgent.acceleration = 8f;
         }
-        
-        // 다른 플레이어의 경우 NavMeshAgent 비활성화
-        if (!IsOwner)
+
+       
+        if(IsOwner)
         {
-            if (_navAgent != null)
-            {
-                _navAgent.enabled = false;
-                Debug.Log($"다른 플레이어의 NavMeshAgent 비활성화: {OwnerClientId}");
-            }
-        }
-        else 
-        {
+            SetupCamera();
             // 자신의 플레이어인 경우 초기화
             _lastSentPosition = transform.position;
             _lastSentRotation = transform.rotation;
             _lastPositionUpdateTime = Time.time;
-            
+
             // NavMeshAgent 설정
             if (_navAgent != null && _characterStats != null)
             {
@@ -114,32 +112,9 @@ public class PlayerController : NetworkBehaviour
                 _navAgent.acceleration = 8f;
             }
         }
-        
+
         // 체력바 초기화
         InitializeHealthBar();
-        
-        // 자신의 플레이어일 경우 초기화
-        if (IsOwner)
-        {
-            // 플레이어 ID 설정
-            string playerId = "Player" + NetworkManager.Singleton.LocalClientId.ToString();
-            
-            // Object_Base에 플레이어 ID 설정
-            if (_objectBase != null)
-            {
-                _objectBase.SetPlayerIdServerRpc(playerId);
-            }
-            
-            // 카메라 설정
-            SetupCamera();
-            CreateMoveIndicator();
-            
-            // 스킬 정보 초기화
-            InitializeSkills();
-            
-            // 캐릭터 데이터 로드
-            LoadCharacterData();
-        }
         
         // 네트워크 변수 콜백
         _isMoving.OnValueChanged += OnMovingChanged;
@@ -230,9 +205,14 @@ public class PlayerController : NetworkBehaviour
         {
             // 초기 체력바 상태 설정
             UpdateHealthBar(_objectBase.GetCurrentHP(), _objectBase.GetMaxHP());
-        
+    
             // 데미지 이벤트 구독
             _objectBase.OnDamageTaken += UpdateHealthBar;
+        }
+        else
+        {
+            // null 체크를 위한 로그 추가
+            Debug.LogWarning($"InitializeHealthBar: _objectBase = {_objectBase}, _healthBarFill = {_healthBarFill}");
         }
     }
     
@@ -243,37 +223,37 @@ public class PlayerController : NetworkBehaviour
             // 체력 비율 계산
             float fillAmount = Mathf.Clamp01(currentHealth / maxHealth);
             _healthBarFill.fillAmount = fillAmount;
-            
+        
             // 로컬 플레이어일 경우 GamePlayManager에 HP 상태 업데이트
             if (IsOwner)
             {
                 GamePlayManager.Instance.UpdatePlayerHPFromServer(fillAmount);
             }
         }
+        else
+        {
+            Debug.LogWarning($"UpdateHealthBar: _healthBarFill is null. CurrentHealth = {currentHealth}, MaxHealth = {maxHealth}");
+        }
     }
     
     private void SetupCamera()
     {
-        try {
-            // 카메라 프리팹 생성
-            GameObject cameraObj = Instantiate(_cameraPrefab);
-            cameraObj.name = "QuadViewCamera";
-            
-            // 쿼드뷰 시네머신 컨트롤러 가져오기
-            _cameraController = cameraObj.GetComponent<QuadViewCinemachine>();
-            
-            // 카메라 타겟 설정
-            if (_cameraController != null)
+        
+        if (!IsOwner) return; // 로컬 플레이어가 아니면 실행 안함
+        Debug.Log("=== SetupCamera 호출 ===");
+    
+        // 자식에서 이미 있는 QuadViewCinemachine 찾기
+        _cameraController = GetComponentInChildren<QuadViewCinemachine>();
+    
+        if (_cameraController != null)
+        {
+            _cameraController.SetTarget(transform);
+            _playerCamera = _cameraController.GetCamera();
+        
+            if (_playerCamera != null)
             {
-                _cameraController.SetTarget(transform);
-                StartCoroutine(GetQuadViewCameraWithDelay(0.2f));
+                Debug.Log($"카메라 설정 성공: {_playerCamera.name}");
             }
-            
-            // 씬 전환 시에도 카메라 유지
-            DontDestroyOnLoad(cameraObj);
-        }
-        catch (System.Exception e) {
-            Debug.LogError($"카메라 설정 중 오류 발생: {e.Message}");
         }
     }
     
@@ -302,28 +282,29 @@ public class PlayerController : NetworkBehaviour
             _moveIndicator.SetActive(false);
         }
     }
-    
+
     private void Update()
     {
         if (!IsOwner) return;
-        
+
         // 이동 입력 처리
         HandleMovementInput();
-        
+
         // 스킬 입력 처리
         HandleSkillInput();
-        
+
+
         // 스킬 쿨다운 업데이트
         UpdateSkillCooldowns();
-        
+
         // 이동 상태 업데이트
         UpdateMovementState();
-        
+
         // 위치 동기화 로직 추가
         UpdatePositionSynchronization();
     }
-    
-    
+
+
     private void HandleMovementInput()
     {
         // 마우스 우클릭 감지
@@ -331,12 +312,8 @@ public class PlayerController : NetworkBehaviour
         {
             if (_playerCamera == null)
             {
-                _playerCamera = Camera.main;
-                if (_playerCamera == null)
-                {
-                    Debug.LogError("카메라를 찾을 수 없습니다. 이동 불가.");
-                    return;
-                }
+                Debug.LogError("카메라를 찾을 수 없습니다. 이동 불가.");
+                return;
             }
 
             Ray ray = _playerCamera.ScreenPointToRay(Input.mousePosition);
@@ -347,7 +324,7 @@ public class PlayerController : NetworkBehaviour
                 // 이동 표시자 표시
                 if (_moveIndicator != null)
                 {
-                    _moveIndicator.transform.position = hit.point + Vector3.up * 0.3f;
+                    _moveIndicator.transform.position = hit.point + Vector3.up * 0.5f;
                     _moveIndicator.SetActive(true);
                     StartCoroutine(HideMoveIndicator(0.5f));
                 }
@@ -453,6 +430,8 @@ public class PlayerController : NetworkBehaviour
     // 위치 동기화 처리
     private void UpdatePositionSynchronization()
     {
+        if(!IsOwner) return;
+        
         // 현재 시간이 마지막 업데이트 시간 + 업데이트 간격보다 크면 업데이트
         if (Time.time - _lastPositionUpdateTime >= _positionUpdateInterval)
         {

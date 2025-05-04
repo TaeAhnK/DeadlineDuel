@@ -61,6 +61,8 @@ public class GameLobbyManager : NetworkBehaviour
         // 이전 씬에서 정보 가져오기
         LoadGameInfo();
         
+        // 네트워크 설정
+        SetupNetwork();
         
         // UI 초기화
         _gameInfoText.text = "게임 준비 중...";
@@ -73,9 +75,6 @@ public class GameLobbyManager : NetworkBehaviour
         
         // 스폰 포인트 초기화
         InitializeSpawnPoints();
-        
-        // 네트워크 설정
-        SetupNetwork();
     }
     
     public override void OnNetworkSpawn()
@@ -173,12 +172,11 @@ public class GameLobbyManager : NetworkBehaviour
         }
         
         // 네트워크에 스폰하고 소유권 설정
+        Debug.Log($"SpawnAsPlayerObject 호출: clientId={clientId}");
         networkObject.SpawnAsPlayerObject(clientId);
         
         // 스폰된 플레이어 추적
         _spawnedPlayers.Add(clientId, playerInstance);
-        
-        Debug.Log($"클라이언트 {clientId}의 플레이어가 스폰되었습니다. 위치: {spawnPoint.position}");
     }
     
     private void SetupNetwork()
@@ -681,31 +679,48 @@ public class GameLobbyManager : NetworkBehaviour
             yield break;
         }
 
-        try
+
+        JoinAllocation joinAllocation = joinTask.Result;
+        Debug.Log("Relay 참가 성공!");
+
+        // 클라이언트 설정
+        NetworkManager.Singleton.GetComponent<UnityTransport>().SetClientRelayData(
+            joinAllocation.RelayServer.IpV4,
+            (ushort)joinAllocation.RelayServer.Port,
+            joinAllocation.AllocationIdBytes,
+            joinAllocation.Key,
+            joinAllocation.ConnectionData,
+            joinAllocation.HostConnectionData
+        );
+
+        // 클라이언트 시작
+        NetworkManager.Singleton.StartClient();
+
+        // 연결 완료 대기
+        float timeout = 10f;
+        float elapsed = 0f;
+
+        while (!NetworkManager.Singleton.IsConnectedClient && elapsed < timeout)
         {
-            JoinAllocation joinAllocation = joinTask.Result;
-            Debug.Log("Relay 참가 성공!");
-
-            // 클라이언트 설정
-            NetworkManager.Singleton.GetComponent<UnityTransport>().SetClientRelayData(
-                joinAllocation.RelayServer.IpV4,
-                (ushort)joinAllocation.RelayServer.Port,
-                joinAllocation.AllocationIdBytes,
-                joinAllocation.Key,
-                joinAllocation.ConnectionData,
-                joinAllocation.HostConnectionData
-            );
-
-            // 클라이언트 시작
-            NetworkManager.Singleton.StartClient();
-            _isNetworkActive = true;
-            _gameInfoText.text = "서버에 접속 완료, 준비 중...";
+            Debug.Log($"연결 대기 중... ({elapsed:F1}초)");
+            elapsed += Time.deltaTime;
+            yield return null;
         }
-        catch (Exception e)
+
+        if (NetworkManager.Singleton.IsConnectedClient)
         {
-            Debug.LogError($"Relay 클라이언트 설정 중 예외 발생: {e.Message}");
+            Debug.Log($"서버 연결 성공! LocalClientId: {NetworkManager.Singleton.LocalClientId}");
+            _isNetworkActive = true;
+        }
+        else
+        {
+            Debug.LogError("서버 연결 타임아웃!");
             _isNetworkActive = false;
         }
+
+        _isNetworkActive = true;
+        _gameInfoText.text = "서버에 접속 완료, 게임 준비 중...";
+
     }
 
     // 서버 카운트다운

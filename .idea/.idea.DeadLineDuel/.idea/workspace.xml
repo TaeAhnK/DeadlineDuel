@@ -6,20 +6,35 @@
   <component name="ChangeListManager">
     <list default="true" id="1ef3ec2e-6ecc-4479-badc-e18c7073aaca" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.DeadLineDuel/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.DeadLineDuel/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/01.Scenes/03.GameLobby.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/01.Scenes/03.GameLobby.unity" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/01.Scenes/04.GamePlay.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/01.Scenes/04.GamePlay.unity" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/01.Scenes/05.GameResult.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/01.Scenes/05.GameResult.unity" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Data/CharacterStats.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Data/CharacterStats.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/01.Scenes/PlayerSkillTest.unity" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/01.Scenes/PlayerSkillTest.unity.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/01.Scenes/PlayerSkillTest/NavMesh-Plane.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/01.Scenes/PlayerSkillTest/NavMesh-Plane.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/01.Scenes/PlayerSkillTest/NavMesh-Plane.asset.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/01.Scenes/PlayerSkillTest/NavMesh-Plane.asset.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Manager/GameLobbyManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Manager/GameLobbyManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Manager/GamePlayerManager.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Manager/GamePlayerManager.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Object/Object_Base.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Object/Object_Base.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Player/PlayerController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Player/PlayerController.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Player/PlayerCustomizer.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Player/PlayerCustomizer.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Player/QuadViewController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Player/QuadViewController.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Test/TestPlayerController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/02.Scripts/SJ/Test/TestPlayerController.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/03.Prefabs/Player.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/03.Prefabs/Player.prefab" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/DefaultNetworkPrefabs.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/DefaultNetworkPrefabs.asset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/KTW/Prefabs/BuffTotem.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/KTW/Prefabs/BuffTotem.prefab" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/KTW/Scripts/Object_Base.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/KTW/Scripts/Object_Base.cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/KTW/Scripts/UI/UI_PlayerUI.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/KTW/Scripts/UI/UI_PlayerUI.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/KTW/UI Asset/Prefabs/Bar_PlayerHP.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/KTW/UI Asset/Prefabs/Bar_PlayerHP.prefab" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/03.Prefabs/QuadViewCamera.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/03.Prefabs/QuadViewCamera.prefab" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/04.Materials/Boss Skill VFX/Tech/Arrows_Rain_Decal_Tech.mat.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/04.Materials/Boss Skill VFX/Tech/Arrows_Rain_Decal_Tech.mat.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/04.Materials/Boss Skill VFX/Tech/TechCircle_Sight.mat.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/04.Materials/Boss Skill VFX/Tech/TechCircle_Sight.mat.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/04.Materials/Boss Skill VFX/Tech/TechSquare.mat.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/04.Materials/Boss Skill VFX/Tech/TechSquare.mat.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/04.Materials/Boss Skill VFX/Tech/TechSquare_Corners.mat.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/04.Materials/Boss Skill VFX/Tech/TechSquare_Corners.mat.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/04.Materials/Boss Skill VFX/Tech/Tech_ShapesPickbook_Add.mat.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/04.Materials/Boss Skill VFX/Tech/Tech_ShapesPickbook_Add.mat.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/05.Textures/Boss Skill VFX/SmokeHarsh_BlackSpots.png.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/05.Textures/Boss Skill VFX/SmokeHarsh_BlackSpots.png.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/05.Textures/Boss Skill VFX/TechCircle_Target.png.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/05.Textures/Boss Skill VFX/TechCircle_Target.png.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/05.Textures/Boss Skill VFX/TechSquare.png.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/05.Textures/Boss Skill VFX/TechSquare.png.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/05.Textures/Boss Skill VFX/Tech_DecalRing.png.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/05.Textures/Boss Skill VFX/Tech_DecalRing.png.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/05.Textures/Boss Skill VFX/Tech_Packed_002.png.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/05.Textures/Boss Skill VFX/Tech_Packed_002.png.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/05.Textures/Boss Skill VFX/TechnoNoise.TGA.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/05.Textures/Boss Skill VFX/TechnoNoise.TGA.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/08.Animations/Player/Kosmo.controller" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/08.Animations/Player/Kosmo.controller.meta" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/TextMesh Pro/Resources/Fonts &amp; Materials/LiberationSans SDF - Fallback.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/TextMesh Pro/Resources/Fonts &amp; Materials/LiberationSans SDF - Fallback.asset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ProjectSettings/EditorBuildSettings.asset" beforeDir="false" afterPath="$PROJECT_DIR$/ProjectSettings/EditorBuildSettings.asset" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -30,25 +45,25 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="HighlightingSettingsPerFile">
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/5a41d6b7189842eca409fd0b1c3e3dcf17bf78/76/d1cb475f/Action.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/9384495d2a482ac7341d67ca84e16d267d16c62458a9d67a92b119199a9/System.Threading.Tasks.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/02.Scripts/SJ/Data/CharacterData.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/02.Scripts/SJ/Data/SwordCharacterData.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/02.Scripts/SJ/LobbySceneLoader.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/02.Scripts/SJ/Manager/GameInitManager.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/02.Scripts/SJ/Manager/GameLobbyManager.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Assets/02.Scripts/SJ/Manager/GamePlayerManager.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/02.Scripts/SJ/Object/BossSpawnPillar.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Assets/02.Scripts/SJ/Object/Dummy/TestDummyTarget.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/02.Scripts/SJ/Object/Object_Base.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/02.Scripts/SJ/Player/MoveIndicatorController.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/02.Scripts/SJ/Player/PlayerCustomizer.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/02.Scripts/SJ/Player/QuadViewController.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Assets/02.Scripts/SJ/Player/TestPlayerController.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/02.Scripts/SJ/Skill/SkillEffects.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/02.Scripts/SJ/Skill/SwordCharacterSkillsExtension.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Library/PackageCache/com.unity.netcode.gameobjects@1.12.2/Components/NetworkTransform.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Library/PackageCache/com.unity.netcode.gameobjects@1.12.2/Runtime/Core/NetworkBehaviour.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Library/PackageCache/com.unity.netcode.gameobjects@1.12.2/Runtime/Core/NetworkManager.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Library/PackageCache/com.unity.netcode.gameobjects@1.12.2/Runtime/Logging/NetworkLog.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Library/PackageCache/com.unity.netcode.gameobjects@1.12.2/Runtime/Messaging/NetworkMessageManager.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Library/PackageCache/com.unity.netcode.gameobjects@1.12.2/Runtime/Messaging/RpcAttributes.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Library/PackageCache/com.unity.netcode.gameobjects@1.12.2/Runtime/NetworkVariable/NetworkVariable.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Library/PackageCache/com.unity.netcode.gameobjects@1.12.2/Runtime/Spawning/NetworkSpawnManager.cs" root0="SKIP_HIGHLIGHTING" />

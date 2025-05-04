@@ -1,13 +1,35 @@
 using Unity.Netcode;
 using UnityEngine;
 
+// NetworkString 구조체 추가
+public struct NetworkString : INetworkSerializable
+{
+    public string Value;
+
+    public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+    {
+        // 초기화되지 않은 string을 위한 안전한 처리
+        if (Value == null)
+        {
+            Value = string.Empty;
+        }
+        serializer.SerializeValue(ref Value);
+    }
+    
+    // 기본 생성자 추가
+    public NetworkString(string value)
+    {
+        Value = value ?? string.Empty;
+    }
+}
+
 public class Object_Base : NetworkBehaviour
 {
     // CharacterStats 참조 - 직렬화 문제 없음
     private CharacterStats _stats;
     
-    // 네트워크 변수
-    private NetworkVariable<string> playerId = new NetworkVariable<string>();
+    // 네트워크 변수 - NetworkString 타입으로 변경
+    private NetworkVariable<NetworkString> playerId = new NetworkVariable<NetworkString>(new NetworkString(""));
     
     // 이벤트
     public System.Action<float, float> OnDamageTaken;
@@ -36,13 +58,13 @@ public class Object_Base : NetworkBehaviour
     [ServerRpc]
     public void SetPlayerIdServerRpc(string id)
     {
-        playerId.Value = id;
+        playerId.Value = new NetworkString { Value = id };
     }
     
     // 플레이어 ID 가져오기
     public string GetPlayerId()
     {
-        return playerId.Value;
+        return playerId.Value.Value;
     }
     
     // 스탯 접근 메서드들 (getter)
@@ -86,7 +108,7 @@ public class Object_Base : NetworkBehaviour
         }
         
         // 서버에서만 스탯 업데이트를 UI에 알림
-        if (IsServer && !string.IsNullOrEmpty(playerId.Value))
+        if (IsServer && !string.IsNullOrEmpty(playerId.Value.Value))
         {
             // 게임 매니저를 통해 UI 업데이트
             GamePlayManager.Instance.UpdatePlayerStatsFromServer(
@@ -102,7 +124,7 @@ public class Object_Base : NetworkBehaviour
             _stats.TakeDamage(damage);
             
             // 플레이어인 경우 UI 업데이트
-            if (!string.IsNullOrEmpty(playerId.Value))
+            if (!string.IsNullOrEmpty(playerId.Value.Value))
             {
                 GamePlayManager.Instance.UpdatePlayerHPFromServer(_stats.CurrentHP / _stats.MaxHP);
             }
