@@ -138,6 +138,12 @@ public class TestPlayerController : MonoBehaviour
                 if (_navAgent != null && _navAgent.isOnNavMesh && _navAgent.enabled)
                 {
                     _navAgent.SetDestination(hit.point);
+                    
+                    // 애니메이션 재생
+                    if (_animator != null)
+                    {
+                        _animator.SetBool("IsMoving", true);
+                    }
                     Debug.Log($"이동 목적지 설정: {hit.point}");
                 }
                 else

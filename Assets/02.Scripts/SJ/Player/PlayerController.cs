@@ -9,9 +9,6 @@ using UnityEngine.UI;
 
 public class PlayerController : NetworkBehaviour
 {
-    [Header("카메라 설정")]
-    [SerializeField] private GameObject _cameraPrefab;
-    
     private QuadViewCinemachine _cameraController;
     private Camera _playerCamera;
     
@@ -28,6 +25,25 @@ public class PlayerController : NetworkBehaviour
     [SerializeField] private RectTransform _healthBarBackground;
     [SerializeField] private Image _healthBarFill;
     
+    [Header("일반 공격 설정")]
+    [SerializeField] private int _maxCombo = 4;
+    [SerializeField] private float _comboWindow = 1f; // 콤보 유지 시간
+    [SerializeField] private float _comboDistance = 2f; // 일반공격 거리
+    [SerializeField] private float _comboDamage = 10f; // 일반공격 데미지
+    
+    [Header("일반 공격 이펙트")]
+    [SerializeField] private GameObject[] _normalAttackEffects; // 콤보별 이펙트
+    [SerializeField] private GameObject _dashAttackEffect; // 대시 공격 이펙트
+    
+    // 이펙트 회전 옵션 추가
+    [Header("이펙트 회전 설정")]
+    [SerializeField] private bool _useEffectCustomRotation = true;
+    [SerializeField] private Vector3[] _normalAttackRotationOffsets; // 콤보별 회전값
+    [SerializeField] private Vector3 _dashAttackRotationOffset; // 대시 공격 회전값
+    
+    // 이펙트 스폰 위치
+    [SerializeField] private Transform _attackEffectOrigin;
+    
     // 컴포넌트 참조
     private Animator _animator;
     private NavMeshAgent _navAgent;
@@ -35,9 +51,15 @@ public class PlayerController : NetworkBehaviour
     private Object_Base _objectBase;
     private CharacterStats _characterStats;
     
+    //일반공격콤보변수
+    private int _currentCombo = 0;
+    private float _lastAttackTime = 0f;
+    
     // 네트워크 변수
     private NetworkVariable<bool> _isMoving = new NetworkVariable<bool>(false);
     private NetworkVariable<int> _currentSkillIndex = new NetworkVariable<int>(-1);
+    private NetworkVariable<bool> _isDead = new NetworkVariable<bool>(false);
+    private NetworkVariable<bool> _isAttacking = new NetworkVariable<bool>(false);
     
     // 스킬 쿨다운 타이머
     private float[] _skillCooldowns = new float[4];
@@ -72,8 +94,12 @@ public class PlayerController : NetworkBehaviour
         public bool isTargeted;
         public string animationTrigger;
     }
+
     public override void OnNetworkSpawn()
     {
+
+        Debug.Log($"[OnNetworkSpawn] IsOwner: {IsOwner}, OwnerClientId: {OwnerClientId}");
+
         base.OnNetworkSpawn();
         
         // 컴포넌트 참조 가져오기
@@ -82,6 +108,10 @@ public class PlayerController : NetworkBehaviour
         _objectBase = GetComponent<Object_Base>();
         _characterStats = GetComponent<CharacterStats>();
         
+        CreateMoveIndicator();
+        InitializeSkills();
+        LoadCharacterData();
+
         // NavMeshAgent 설정
         if (_navAgent != null && _characterStats != null)
         {
@@ -89,23 +119,16 @@ public class PlayerController : NetworkBehaviour
             _navAgent.angularSpeed = _rotationSpeed * 100;
             _navAgent.acceleration = 8f;
         }
-        
-        // 다른 플레이어의 경우 NavMeshAgent 비활성화
-        if (!IsOwner)
+
+       
+        if(IsOwner)
         {
-            if (_navAgent != null)
-            {
-                _navAgent.enabled = false;
-                Debug.Log($"다른 플레이어의 NavMeshAgent 비활성화: {OwnerClientId}");
-            }
-        }
-        else 
-        {
+            SetupCamera();
             // 자신의 플레이어인 경우 초기화
             _lastSentPosition = transform.position;
             _lastSentRotation = transform.rotation;
             _lastPositionUpdateTime = Time.time;
-            
+
             // NavMeshAgent 설정
             if (_navAgent != null && _characterStats != null)
             {
@@ -114,36 +137,20 @@ public class PlayerController : NetworkBehaviour
                 _navAgent.acceleration = 8f;
             }
         }
-        
+
         // 체력바 초기화
         InitializeHealthBar();
-        
-        // 자신의 플레이어일 경우 초기화
-        if (IsOwner)
-        {
-            // 플레이어 ID 설정
-            string playerId = "Player" + NetworkManager.Singleton.LocalClientId.ToString();
-            
-            // Object_Base에 플레이어 ID 설정
-            if (_objectBase != null)
-            {
-                _objectBase.SetPlayerIdServerRpc(playerId);
-            }
-            
-            // 카메라 설정
-            SetupCamera();
-            CreateMoveIndicator();
-            
-            // 스킬 정보 초기화
-            InitializeSkills();
-            
-            // 캐릭터 데이터 로드
-            LoadCharacterData();
-        }
         
         // 네트워크 변수 콜백
         _isMoving.OnValueChanged += OnMovingChanged;
         _currentSkillIndex.OnValueChanged += OnSkillIndexChanged;
+        _isDead.OnValueChanged += OnDeathStateChanged;
+        
+        // CharacterStats의 OnDeath 이벤트 구독
+        if (_characterStats != null)
+        {
+            _characterStats.OnDeath += HandleLocalDeath;
+        }
     }
 
     private void LoadCharacterData()
@@ -230,9 +237,14 @@ public class PlayerController : NetworkBehaviour
         {
             // 초기 체력바 상태 설정
             UpdateHealthBar(_objectBase.GetCurrentHP(), _objectBase.GetMaxHP());
-        
+    
             // 데미지 이벤트 구독
             _objectBase.OnDamageTaken += UpdateHealthBar;
+        }
+        else
+        {
+            // null 체크를 위한 로그 추가
+            Debug.LogWarning($"InitializeHealthBar: _objectBase = {_objectBase}, _healthBarFill = {_healthBarFill}");
         }
     }
     
@@ -243,54 +255,37 @@ public class PlayerController : NetworkBehaviour
             // 체력 비율 계산
             float fillAmount = Mathf.Clamp01(currentHealth / maxHealth);
             _healthBarFill.fillAmount = fillAmount;
-            
+        
             // 로컬 플레이어일 경우 GamePlayManager에 HP 상태 업데이트
             if (IsOwner)
             {
                 GamePlayManager.Instance.UpdatePlayerHPFromServer(fillAmount);
             }
         }
+        else
+        {
+            Debug.LogWarning($"UpdateHealthBar: _healthBarFill is null. CurrentHealth = {currentHealth}, MaxHealth = {maxHealth}");
+        }
     }
     
     private void SetupCamera()
     {
-        try {
-            // 카메라 프리팹 생성
-            GameObject cameraObj = Instantiate(_cameraPrefab);
-            cameraObj.name = "QuadViewCamera";
-            
-            // 쿼드뷰 시네머신 컨트롤러 가져오기
-            _cameraController = cameraObj.GetComponent<QuadViewCinemachine>();
-            
-            // 카메라 타겟 설정
-            if (_cameraController != null)
-            {
-                _cameraController.SetTarget(transform);
-                StartCoroutine(GetQuadViewCameraWithDelay(0.2f));
-            }
-            
-            // 씬 전환 시에도 카메라 유지
-            DontDestroyOnLoad(cameraObj);
-        }
-        catch (System.Exception e) {
-            Debug.LogError($"카메라 설정 중 오류 발생: {e.Message}");
-        }
-    }
-    
-    private IEnumerator GetQuadViewCameraWithDelay(float delay)
-    {
-        yield return new WaitForSeconds(delay);
         
-        // 카메라 컨트롤러에서 카메라 참조 가져오기
+        if (!IsOwner) return; // 로컬 플레이어가 아니면 실행 안함
+        Debug.Log("=== SetupCamera 호출 ===");
+    
+        // 자식에서 이미 있는 QuadViewCinemachine 찾기
+        _cameraController = GetComponentInChildren<QuadViewCinemachine>();
+    
         if (_cameraController != null)
         {
+            _cameraController.SetTarget(transform);
             _playerCamera = _cameraController.GetCamera();
-        }
         
-        // 카메라를 찾지 못한 경우 대체 방법
-        if (_playerCamera == null)
-        {
-            _playerCamera = Camera.main;
+            if (_playerCamera != null)
+            {
+                Debug.Log($"카메라 설정 성공: {_playerCamera.name}");
+            }
         }
     }
     
@@ -302,28 +297,38 @@ public class PlayerController : NetworkBehaviour
             _moveIndicator.SetActive(false);
         }
     }
-    
+
     private void Update()
     {
         if (!IsOwner) return;
-        
+
         // 이동 입력 처리
         HandleMovementInput();
-        
+
         // 스킬 입력 처리
         HandleSkillInput();
+
+        UpdateMovementAnimation();
         
+        // 일반 공격 입력 처리
+        HandleNormalAttack();
+        
+        // 콤보 초기화 체크
+        CheckComboReset();
+
         // 스킬 쿨다운 업데이트
         UpdateSkillCooldowns();
-        
+
         // 이동 상태 업데이트
         UpdateMovementState();
-        
+
         // 위치 동기화 로직 추가
         UpdatePositionSynchronization();
+
+        
     }
-    
-    
+
+
     private void HandleMovementInput()
     {
         // 마우스 우클릭 감지
@@ -331,12 +336,8 @@ public class PlayerController : NetworkBehaviour
         {
             if (_playerCamera == null)
             {
-                _playerCamera = Camera.main;
-                if (_playerCamera == null)
-                {
-                    Debug.LogError("카메라를 찾을 수 없습니다. 이동 불가.");
-                    return;
-                }
+                Debug.LogError("카메라를 찾을 수 없습니다. 이동 불가.");
+                return;
             }
 
             Ray ray = _playerCamera.ScreenPointToRay(Input.mousePosition);
@@ -347,7 +348,7 @@ public class PlayerController : NetworkBehaviour
                 // 이동 표시자 표시
                 if (_moveIndicator != null)
                 {
-                    _moveIndicator.transform.position = hit.point + Vector3.up * 0.3f;
+                    _moveIndicator.transform.position = hit.point + Vector3.up * 0.5f;
                     _moveIndicator.SetActive(true);
                     StartCoroutine(HideMoveIndicator(0.5f));
                 }
@@ -360,6 +361,42 @@ public class PlayerController : NetworkBehaviour
             }
         }
     }
+    
+    private void UpdateMovementAnimation()
+    {
+        if (!IsOwner) return;
+    
+        if (_navAgent == null || _animator == null) return;
+
+        // 속도 계산
+        float speed = _navAgent.velocity.magnitude;
+        bool isMoving = speed > 0.1f;
+    
+        // 속도 정규화 (0~1 범위)
+        float normalizedSpeed = Mathf.Clamp01(speed / _navAgent.speed);
+    
+        // 애니메이션 파라미터 설정
+        _animator.SetFloat("Speed", normalizedSpeed);
+    
+        // 서버에 속도 동기화
+        SyncMovementServerRpc(normalizedSpeed, isMoving);
+    }
+    
+    [ServerRpc]
+    private void SyncMovementServerRpc(float speed, bool isMoving)
+    {
+        _isMoving.Value = isMoving; // 기존 네트워크 변수 업데이트
+        SyncSpeedClientRpc(speed);
+    }
+    
+    [ClientRpc]
+    private void SyncSpeedClientRpc(float speed)
+    {
+        if (!IsOwner && _animator != null)
+        {
+            _animator.SetFloat("Speed", speed);
+        }
+    }
 
     private IEnumerator HideMoveIndicator(float delay)
     {
@@ -369,6 +406,249 @@ public class PlayerController : NetworkBehaviour
             _moveIndicator.SetActive(false);
         }
     }
+    
+    private void HandleNormalAttack()
+    {
+        if (Input.GetMouseButtonDown(0)) // 좌클릭
+        {
+            
+            // 이동 중인지 확인
+            bool isMoving = _navAgent.velocity.magnitude > 0.1f;
+            
+            // 콤보 윈도우 확인
+            if (Time.time - _lastAttackTime <= _comboWindow && _currentCombo < _maxCombo)
+            {
+                _currentCombo++;
+            }
+            else
+            {
+                _currentCombo = 1; // 콤보 초기화
+            }
+            
+            _lastAttackTime = Time.time;
+            
+            // 이동 중이면 대시공격, 아니면 일반공격
+            if (isMoving)
+            {
+                PerformDashAttack();
+            }
+            else
+            {
+                PerformNormalAttack();
+            }
+        }
+    }
+    
+    private void PerformDashAttack()
+    {
+        // 로컬에서 즉시 대시공격 애니메이션 재생
+        if (_animator != null)
+        {
+            _animator.SetTrigger("DashAttack1");
+        }
+        
+        // 대시어택 후 움직임을 완전히 멈추는 코루틴 시작
+        StartCoroutine(StopMovementAfterDashAttack(0.5f));
+    
+        // 서버에 대시공격 요청 (AnimationEvent로 이펙트 실행)
+        PerformDashAttackServerRpc(_currentCombo);
+    }
+    
+    private IEnumerator StopMovementAfterDashAttack(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+    
+        if (_navAgent != null)
+        {
+            _navAgent.ResetPath(); // 경로 초기화
+            _navAgent.velocity = Vector3.zero; // 속도 제거
+            _navAgent.isStopped = false; // 이동 가능 상태로 유지
+            
+            // 서버에 멈춤 상태 알림
+            StopMovementServerRpc();
+        }
+    }
+    
+    [ServerRpc]
+    private void StopMovementServerRpc()
+    {
+        if (_navAgent != null)
+        {
+            _navAgent.ResetPath();
+            _navAgent.velocity = Vector3.zero;
+        }
+    
+        // 이동 상태 업데이트 (false로 설정)
+        _isMoving.Value = false;
+    }
+    
+    private void PerformNormalAttack()
+    {
+        // 로컬에서 즉시 애니메이션 재생
+        if (_animator != null)
+        {
+            string comboTrigger = $"NormalAttack{_currentCombo}";
+            _animator.SetTrigger(comboTrigger);
+            
+            // 현재 콤보 번호 설정
+            _animator.SetInteger("ComboCount", _currentCombo);
+        }
+        
+        // 서버에 공격 요청
+        PerformNormalAttackServerRpc(_currentCombo);
+    }
+    
+    // Animation Event로 호출될 메서드들
+    public void OnNormalAttackEffect(int comboIndex)
+    {
+        if (_normalAttackEffects != null && comboIndex > 0 && comboIndex <= _normalAttackEffects.Length)
+        {
+            SpawnEffect(_normalAttackEffects[comboIndex - 1], false, comboIndex);
+        }
+    }
+    
+    public void OnDashAttackEffect()
+    {
+        SpawnEffect(_dashAttackEffect, true);
+    }
+    
+    private IEnumerator ResetAttackState(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        _isAttacking.Value = false;
+    }
+    
+    private void CheckComboReset()
+    {
+        // 콤보 타임아웃
+        if (Time.time - _lastAttackTime > _comboWindow && _currentCombo > 0)
+        {
+            ResetCombo();
+        }
+        
+        // 4콤보 완료 후 강제 초기화
+        else if (_currentCombo >= _maxCombo)
+        {
+            if (Time.time - _lastAttackTime > 0.5f) // 4콤보 애니메이션 충분히 재생 후
+            {
+                _currentCombo = 0; // 다음 클릭 시 1콤보부터 시작하도록
+            }
+        }
+    }
+    
+    private void ResetCombo()
+    {
+        // 콤보 종료 애니메이션 트리거
+        if (_animator != null)
+        {
+            _animator.SetTrigger("ComboReset");
+        }
+        
+        _currentCombo = 0;
+        Debug.Log("콤보 리셋");
+    }
+    
+    [ServerRpc]
+    private void PerformDashAttackServerRpc(int comboIndex)
+    {
+        // 대시공격도 일반공격과 동일한 범위 체크 로직 사용
+        PerformAttackLogic(comboIndex, isDashAttack: true);
+        
+        // 모든 클라이언트에 이펙트 표시 명령
+        TriggerAttackEffectClientRpc(comboIndex, true); 
+    }
+    
+    [ServerRpc]
+    private void PerformNormalAttackServerRpc(int comboIndex)
+    {
+        PerformAttackLogic(comboIndex, isDashAttack: false);
+        
+        // 모든 리모트 클라이언트에 애니메이션 이벤트 타이밍 전달
+        TriggerAttackEffectClientRpc(comboIndex, false);
+    }
+    
+    [ClientRpc]
+    private void TriggerAttackEffectClientRpc(int comboIndex, bool isDashAttack)
+    {
+        if (IsOwner) return; // 로컬 플레이어는 애니메이션 이벤트로 처리
+    
+        // 리모트 클라이언트에서도 애니메이션 이벤트 트리거
+        if (isDashAttack)
+        {
+            OnDashAttackEffect();
+        }
+        else
+        {
+            OnNormalAttackEffect(comboIndex);
+        }
+    }
+    
+    private void PerformAttackLogic(int comboIndex, bool isDashAttack)
+    {
+        // 공격 애니메이션 상태 설정
+        _isAttacking.Value = true;
+        
+        // 전방 부채꼴 범위 체크 (기존 로직과 동일)
+        Collider[] hitColliders = Physics.OverlapSphere(transform.position, _comboDistance);
+        
+        foreach (var collider in hitColliders)
+        {
+            Vector3 direction = collider.transform.position - transform.position;
+            float angle = Vector3.Angle(transform.forward, direction);
+            
+            if (angle < 45f)
+            {
+                PlayerController targetPlayer = collider.GetComponent<PlayerController>();
+                if (targetPlayer != null && targetPlayer != this)
+                {
+                    targetPlayer.TakeDamageServerRpc(_comboDamage);
+                }
+            }
+        }
+        
+        StartCoroutine(ResetAttackState(0.3f));
+    }
+    
+    private void SpawnEffect(GameObject effectPrefab, bool isDashAttack = false, int comboIndex = 0)
+    {
+        if (effectPrefab == null) return;
+        
+        Vector3 spawnPosition = _attackEffectOrigin != null ? 
+            _attackEffectOrigin.position : 
+            transform.position + transform.forward * 0.5f + Vector3.up;
+        
+        // 회전 계산
+        Quaternion effectRotation;
+        if (_useEffectCustomRotation)
+        {
+            if (isDashAttack)
+            {
+                // 대시 공격 회전
+                effectRotation = transform.rotation * Quaternion.Euler(_dashAttackRotationOffset);
+            }
+            else if (_normalAttackRotationOffsets != null && comboIndex > 0 && comboIndex <= _normalAttackRotationOffsets.Length)
+            {
+                // 콤보별 회전
+                effectRotation = transform.rotation * Quaternion.Euler(_normalAttackRotationOffsets[comboIndex - 1]);
+            }
+            else
+            {
+                // 기본 회전
+                effectRotation = transform.rotation;
+            }
+        }
+        else
+        {
+            // 기본 회전 사용
+            effectRotation = transform.rotation;
+        }
+            
+        GameObject effect = Instantiate(effectPrefab, spawnPosition, effectRotation);
+        
+        // 이펙트 자동 제거
+        Destroy(effect, 2f);
+    }
+    
     
     private void HandleSkillInput()
     {
@@ -415,6 +695,12 @@ public class PlayerController : NetworkBehaviour
         if (index < 0 || index >= _skills.Length || _skills[index] == null)
             return;
             
+        // 로컬에서 즉시 애니메이션 재생
+        if (_animator != null && !string.IsNullOrEmpty(_skills[index].animationTrigger))
+        {
+            _animator.SetTrigger(_skills[index].animationTrigger);
+        }
+
         // 스킬 쿨다운 시작
         _skillCooldowns[index] = _skills[index].cooldown;
         
@@ -453,6 +739,8 @@ public class PlayerController : NetworkBehaviour
     // 위치 동기화 처리
     private void UpdatePositionSynchronization()
     {
+        if(!IsOwner) return;
+        
         // 현재 시간이 마지막 업데이트 시간 + 업데이트 간격보다 크면 업데이트
         if (Time.time - _lastPositionUpdateTime >= _positionUpdateInterval)
         {
@@ -579,11 +867,10 @@ public class PlayerController : NetworkBehaviour
                 RaycastHit hit;
                 if (Physics.Raycast(spawnPosition, direction.normalized, out hit, skill.range))
                 {
-                    // 타겟에 데미지 적용
-                    Object_Base targetObj = hit.collider.GetComponent<Object_Base>();
-                    if (targetObj != null)
+                    PlayerController targetPlayer = hit.collider.GetComponent<PlayerController>();
+                    if (targetPlayer != null && targetPlayer != this)
                     {
-                        targetObj.UpdateHP(skill.damage);
+                        targetPlayer.TakeDamageServerRpc(skill.damage);
                     }
                 }
             }
@@ -621,15 +908,11 @@ public class PlayerController : NetworkBehaviour
         
         foreach (var hitCollider in hitColliders)
         {
-            // 타겟 검색
-            Object_Base targetObj = hitCollider.GetComponent<Object_Base>();
-            if (targetObj != null)
+            // Player만 데미지 받도록 처리
+            PlayerController targetPlayer = hitCollider.GetComponent<PlayerController>();
+            if (targetPlayer != null && targetPlayer != this)
             {
-                // 자신이 아닌 경우 데미지 적용
-                if (targetObj != _objectBase)
-                {
-                    targetObj.UpdateHP(damage);
-                }
+                targetPlayer.TakeDamageServerRpc(damage);
             }
         }
     }
@@ -653,13 +936,74 @@ public class PlayerController : NetworkBehaviour
     // 스킬 인덱스 변경 콜백
     private void OnSkillIndexChanged(int oldValue, int newValue)
     {
-        if (newValue >= 0 && newValue < _skills.Length && _skills[newValue] != null)
+        // 소유자가 아닌 경우에만 애니메이션 실행 (리모트 플레이어용)
+        if (!IsOwner && newValue >= 0 && newValue < _skills.Length && _skills[newValue] != null)
         {
             // 스킬 애니메이션 재생
             if (_animator != null && !string.IsNullOrEmpty(_skills[newValue].animationTrigger))
             {
                 _animator.SetTrigger(_skills[newValue].animationTrigger);
             }
+        }
+    }
+    
+    private void HandleLocalDeath()
+    {
+        // 서버에 죽음 알림
+        NotifyDeathServerRpc();
+    }
+    
+    [ServerRpc]
+    private void NotifyDeathServerRpc()
+    {
+        // 서버에서 죽음 상태 설정
+        _isDead.Value = true;
+    }
+    
+    private void OnDeathStateChanged(bool oldValue, bool newValue)
+    {
+        if (newValue) // 죽었을 때
+        {
+            // 죽음 애니메이션 재생
+            if (_animator != null)
+            {
+                _animator.SetTrigger("Death");
+            }
+            
+            // 네비게이션 비활성화
+            if (_navAgent != null)
+            {
+                _navAgent.enabled = false;
+            }
+            
+            // 입력 비활성화 (로컬 플레이어인 경우)
+            if (IsOwner)
+            {
+                // 입력 처리를 막는 플래그를 추가할 수 있음
+                // 예: enabled = false;
+            }
+            
+            Debug.Log($"플레이어 {OwnerClientId} 사망");
+        }
+    }
+    
+    // 데미지 받는 메서드 추가
+    [ServerRpc(RequireOwnership = false)]
+    public void TakeDamageServerRpc(float damage)
+    {
+        if (_isDead.Value) return; // 이미 죽었다면 리턴
+        
+        if (_characterStats != null)
+        {
+            _characterStats.TakeDamage(damage);
+        }
+    }
+    
+    private void OnDestroy()
+    {
+        if (_characterStats != null)
+        {
+            _characterStats.OnDeath -= HandleLocalDeath;
         }
     }
 }

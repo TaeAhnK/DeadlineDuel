@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using Cinemachine;
 using Unity.Netcode;
@@ -17,6 +18,9 @@ public class QuadViewCinemachine : MonoBehaviour
     [SerializeField] private int _edgeThreshold = 20; // 화면 가장자리 픽셀
     [SerializeField] private Transform _cameraTarget; // 카메라가 따라갈 타겟
     
+    // OwnerId를 저장할 변수 추가
+    private ulong _ownerId;
+    
     // 시네머신 컴포넌트
     private CinemachineFramingTransposer _framingTransposer;
     
@@ -33,15 +37,15 @@ public class QuadViewCinemachine : MonoBehaviour
         // 프레이밍 트랜스포저 참조 가져오기
         _framingTransposer = _virtualCamera.GetCinemachineComponent<CinemachineFramingTransposer>();
         
-        // 초기 카메라 타겟 설정
+        // 카메라 타겟 생성 로직 단순화
         if (_cameraTarget == null)
         {
-            // 새로운 빈 게임오브젝트를 카메라 타겟으로 생성
+            // 단순히 로컬 이름으로 생성
             GameObject targetObj = new GameObject("CameraTarget");
             _cameraTarget = targetObj.transform;
             
-            // 씬 전환 시에도 파괴되지 않도록 설정
-            DontDestroyOnLoad(targetObj);
+            // 부모를 이 카메라 오브젝트로 설정
+            _cameraTarget.SetParent(transform);
         }
         
         // 시네머신 카메라의 타겟 설정
@@ -49,6 +53,41 @@ public class QuadViewCinemachine : MonoBehaviour
         
         // 쿼드뷰 각도 설정 (X 회전)
         _virtualCamera.transform.rotation = Quaternion.Euler(45f, 0f, 0f);
+        
+        // Framing Transposer 설정
+        if (_framingTransposer != null)
+        {
+            // 타겟의 회전을 완전히 무시
+            _framingTransposer.m_LookaheadTime = 0;
+            _framingTransposer.m_LookaheadSmoothing = 0;
+        }
+        
+        // 로컬 플레이어만 높은 우선순위 설정
+        NetworkBehaviour owner = GetComponentInParent<NetworkBehaviour>();
+        if (owner != null && owner.IsOwner)
+        {
+            _virtualCamera.Priority = 100; // 높은 우선순위
+        }
+        else
+        {
+            _virtualCamera.Priority = 0;   // 낮은 우선순위
+        
+            // 타인의 카메라는 비활성화
+            _virtualCamera.enabled = false;
+        }
+    
+        // 추가적으로 회전 업데이트를 완전히 차단
+        StartCoroutine(ForceFixedRotation());
+    }
+    
+    private IEnumerator ForceFixedRotation()
+    {
+        while (enabled)
+        {
+            // 매 프레임마다 45도 회전 강제
+            transform.rotation = Quaternion.Euler(45f, 0f, 0f);
+            yield return null;
+        }
     }
     
     private void Update()
@@ -57,6 +96,9 @@ public class QuadViewCinemachine : MonoBehaviour
         if (_playerTransform == null)
             return;
             
+        // 여기에 디버그 추가
+        Debug.Log($"Update 실행: playerTransform = {_playerTransform?.name}");
+        
         // 마우스 휠로 줌인/줌아웃
         float scrollDelta = Input.mouseScrollDelta.y;
         if (scrollDelta != 0)
@@ -120,9 +162,17 @@ public class QuadViewCinemachine : MonoBehaviour
     // 플레이어 타겟 설정 메서드
     public void SetTarget(Transform playerTransform)
     {
+        // 로컬 플레이어가 아닌 경우 설정하지 않음
+        NetworkBehaviour networkBehaviour = playerTransform.GetComponent<NetworkBehaviour>();
+        if (networkBehaviour != null && !networkBehaviour.IsOwner)
+        {
+            Debug.LogWarning($"로컬 플레이어가 아닌 {playerTransform.name}에 대해 SetTarget 시도 차단");
+            return;
+        }
+    
         _playerTransform = playerTransform;
-        
-        // 초기에 카메라 타겟을 플레이어 위치로 설정
+        Debug.Log($"SetTarget 호출: {playerTransform?.name}");
+    
         if (_cameraTarget != null && playerTransform != null)
         {
             _cameraTarget.position = playerTransform.position;
@@ -131,81 +181,15 @@ public class QuadViewCinemachine : MonoBehaviour
 
     public Camera GetCamera()
     {
-        Debug.Log("GetCamera 메서드 실행 중...");
-
-        // 1. 가상 카메라와 연결된 실제 카메라 찾기 (GameCamera)
-        if (_virtualCamera != null)
+        // 이 오브젝트의 자식에서 카메라 찾기
+        Camera childCamera = GetComponentInChildren<Camera>();
+        if (childCamera != null)
         {
-            // _virtualCamera 게임 오브젝트의 실제 카메라 찾기 (계층 구조 탐색)
-            Transform cameraParent = _virtualCamera.transform.parent;
-            if (cameraParent != null)
-            {
-                Camera camera = cameraParent.GetComponentInChildren<Camera>();
-                if (camera != null)
-                {
-                    Debug.Log($"QuadViewCamera의 카메라 컴포넌트 찾음: {camera.name}");
-                    return camera;
-                }
-            }
-
-            // 게임 오브젝트 내의 모든 자식 탐색
-            Camera[] childCameras = _virtualCamera.transform.root.GetComponentsInChildren<Camera>();
-            if (childCameras.Length > 0)
-            {
-                Debug.Log($"루트에서 찾은 첫 번째 카메라: {childCameras[0].name}");
-                return childCameras[0];
-            }
+            return childCamera;
         }
 
-        // 2. 이 스크립트와 같은 게임 오브젝트 내의 카메라 찾기
-        Camera localCamera = GetComponentInChildren<Camera>();
-        if (localCamera != null)
-        {
-            Debug.Log($"이 게임 오브젝트에서 카메라 찾음: {localCamera.name}");
-            return localCamera;
-        }
-
-        // 3. 씬의 모든 카메라 중에서 Main Camera가 아닌 것 찾기
-        Camera[] allCameras = FindObjectsOfType<Camera>();
-        Debug.Log($"씬에서 찾은 카메라 수: {allCameras.Length}");
-
-        foreach (var cam in allCameras)
-        {
-            Debug.Log($"찾은 카메라: {cam.name}, 태그: {cam.tag}");
-
-            // QuadViewCamera 이름을 포함하는 카메라 찾기
-            if (cam.name.Contains("QuadView") || cam.name.Contains("Quad") ||
-                cam.name.Contains("Game") || cam.gameObject.name.Contains("Clone"))
-            {
-                Debug.Log($"QuadViewCamera로 추정되는 카메라 찾음: {cam.name}");
-                return cam;
-            }
-
-            // 메인 카메라가 아닌 첫 번째 카메라
-            if (cam.tag != "MainCamera" && cam.name != "Main Camera")
-            {
-                Debug.Log($"메인 카메라가 아닌 카메라 찾음: {cam.name}");
-                return cam;
-            }
-        }
-
-        // 4. 메인 카메라보다 더 최근에 생성된 카메라 찾기
-        if (allCameras.Length > 1)
-        {
-            // 메인 카메라가 아닌 첫 번째 카메라 반환
-            foreach (var cam in allCameras)
-            {
-                if (cam.name != "Main Camera" && cam.tag != "MainCamera")
-                {
-                    Debug.Log($"메인 카메라가 아닌 카메라 선택: {cam.name}");
-                    return cam;
-                }
-            }
-        }
-
-        // 5. 최후의 수단으로 메인 카메라 사용
-        Debug.LogWarning("QuadViewCamera를 찾지 못해 메인 카메라 사용 중");
-        return Camera.main;
+        Debug.LogError("카메라를 찾을 수 없습니다!");
+        return null;
     }
 
 }
