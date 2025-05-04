@@ -96,15 +96,15 @@ public class BuffTotem : NetworkBehaviour
     }
 
     private Object_Base FindPlayer() {
-        return GamePlayManager_t.Instance.GetPlayer();
+        return TargetManager.Instance.GetPlayer(NetworkManager.Singleton.LocalClientId).GetComponent<Object_Base>();
     }
 
     private Object_Base FindEnemy() {
-        return GamePlayManager_t.Instance.GetEnemy();
+        return TargetManager.Instance.GetEnemy(NetworkManager.Singleton.LocalClientId).GetComponent<Object_Base>();
     }
 
     private BuffableEntity FindBoss() {
-        return GamePlayManager_t.Instance.GetEnemyBoss();
+        return TargetManager.Instance.GetEnemyBoss(NetworkManager.Singleton.LocalClientId).GetComponent<BuffableEntity>();
     }
 
     private void OnDestroy() {
