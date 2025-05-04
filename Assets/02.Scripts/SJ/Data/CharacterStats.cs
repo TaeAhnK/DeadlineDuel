@@ -1,122 +1,98 @@
-using System.Collections;
-using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 
-public class CharacterStats : NetworkBehaviour
+// 캐릭터 스탯만 관리하는 별도 클래스
+public class CharacterStats : MonoBehaviour
 {
-    // 기본 스탯 데이터
-    [SerializeField] private CharacterStatsData _baseStats;
+    [Header("체력 설정")]
+    [SerializeField] private float maxHP = 100f;
+    [SerializeField] private float currentHP = 100f;
     
-    // 네트워크 동기화 변수
-    private NetworkVariable<float> _currentHealth = new NetworkVariable<float>();
+    [Header("스탯 설정")]
+    [SerializeField] private float attack = 10f;
+    [SerializeField] private float defense = 5f;
+    [SerializeField] private float attackSpeed = 1f;
+    [SerializeField] private float moveSpeed = 5f;
+    [SerializeField] private float coolTime = 1.0f;
     
-    // 이벤트
+    // 이벤트 정의
     public event System.Action<float, float> OnHealthChanged;
     public event System.Action OnDeath;
     
-    public override void OnNetworkSpawn()
-    {
-        base.OnNetworkSpawn();
-        
-        _currentHealth.OnValueChanged += OnHealthValueChanged;
-        
-        if (IsServer)
-        {
-            // 서버에서 초기 체력 설정
-            if (_baseStats != null)
-            {
-                _currentHealth.Value = _baseStats.maxHealth;
-            }
-        }
-    }
+    // 프로퍼티
+    public float MaxHP => maxHP;
+    public float CurrentHP => currentHP;
+    public float Attack => attack;
+    public float Defense => defense;
+    public float AttackSpeed => attackSpeed;
+    public float MoveSpeed => moveSpeed;
+    public float CoolTime => coolTime;
     
-    // 스탯 데이터 설정
-    public void SetStatsData(CharacterStatsData statsData)
+    // 데미지 적용 메서드
+    public void TakeDamage(float damage)
     {
-        if (!IsServer) return;
-        
-        _baseStats = statsData;
-        _currentHealth.Value = statsData.maxHealth;
-    }
-    
-    // 데미지 처리
-    [ServerRpc(RequireOwnership = false)]
-    public void TakeDamageServerRpc(float damage, ServerRpcParams serverRpcParams = default)
-    {
-        if (!IsServer) return;
-        
-        // 방어력을 적용한 실제 데미지 계산
         float actualDamage = CalculateDamage(damage);
+        currentHP = Mathf.Max(0, currentHP - actualDamage);
         
-        // 체력 감소
-        _currentHealth.Value = Mathf.Max(0, _currentHealth.Value - actualDamage);
+        // 이벤트 발생
+        OnHealthChanged?.Invoke(currentHP, maxHP);
         
-        // 데미지 이펙트 표시
-        ShowDamageEffectClientRpc(actualDamage);
-    }
-    
-    // 데미지 계산 (방어력 적용)
-    private float CalculateDamage(float damage)
-    {
-        if (_baseStats == null) return damage;
-        
-        // 방어력 공식: damage * (100 / (100 + defense))
-        return damage * (100f / (100f + _baseStats.defense));
-    }
-    
-    [ClientRpc]
-    private void ShowDamageEffectClientRpc(float damage)
-    {
-        // 데미지 시각 효과 (애니메이션, 팝업 텍스트 등)
-        Debug.Log($"Damage taken: {damage}");
-    }
-    
-    // 체력 변경 콜백
-    private void OnHealthValueChanged(float previousValue, float newValue)
-    {
-        OnHealthChanged?.Invoke(newValue, _baseStats != null ? _baseStats.maxHealth : 100f);
-        
-        if (newValue <= 0)
+        if (currentHP <= 0)
         {
             OnDeath?.Invoke();
         }
     }
     
-    // 공격력 getter
-    public float GetAttackPower()
+    // 데미지 계산 메서드
+    private float CalculateDamage(float damage)
     {
-        return _baseStats != null ? _baseStats.attackPower : 10f;
+        return damage * (100f / (100f + defense));
     }
     
-    // 방어력 getter
-    public float GetDefense()
+    // 스탯 수정 메서드
+    public void ModifyAttack(float value)
     {
-        return _baseStats != null ? _baseStats.defense : 5f;
+        attack = Mathf.Max(0, attack + value);
     }
     
-    // 이동속도 getter
-    public float GetMoveSpeed()
+    public void ModifyDefense(float value)
     {
-        return _baseStats != null ? _baseStats.moveSpeed : 5f;
+        defense = Mathf.Max(0, defense + value);
     }
     
-    // 현재 체력 getter
-    public float GetCurrentHealth()
+    public void ModifyAttackSpeed(float value)
     {
-        return _currentHealth.Value;
+        attackSpeed = Mathf.Max(0, attackSpeed + value);
     }
     
-    // 최대 체력 getter
-    public float GetMaxHealth()
+    public void ModifyMoveSpeed(float value)
     {
-        return _baseStats != null ? _baseStats.maxHealth : 100f;
+        moveSpeed = Mathf.Max(0, moveSpeed + value);
     }
     
-    // 현재 체력 퍼센트 getter
-    public float GetHealthPercent()
+    public void ModifyCoolTime(float value)
     {
-        if (_baseStats == null) return 0f;
-        return _currentHealth.Value / _baseStats.maxHealth;
+        coolTime = Mathf.Max(0, coolTime + value);
+    }
+    
+    // 체력 회복 메서드
+    public void Heal(float amount)
+    {
+        currentHP = Mathf.Min(maxHP, currentHP + amount);
+        OnHealthChanged?.Invoke(currentHP, maxHP);
+    }
+    
+    // 스탯 데이터 설정
+    public void SetStatsFromData(CharacterStatsData data)
+    {
+        if (data == null) return;
+        
+        maxHP = data.maxHealth;
+        currentHP = maxHP;
+        attack = data.attackPower;
+        defense = data.defense;
+        moveSpeed = data.moveSpeed;
+        
+        OnHealthChanged?.Invoke(currentHP, maxHP);
     }
 }

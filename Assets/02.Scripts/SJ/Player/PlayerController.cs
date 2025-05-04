@@ -4,29 +4,36 @@ using Unity.Netcode;
 using System.Collections;
 using System.Collections.Generic;
 using Cinemachine;
+using Unity.Netcode.Components;
+using UnityEngine.UI;
 
 public class PlayerController : NetworkBehaviour
 {
     [Header("카메라 설정")]
-    [SerializeField] private GameObject _cameraPrefab; // 시네머신 카메라 프리팹
+    [SerializeField] private GameObject _cameraPrefab;
     
     private QuadViewCinemachine _cameraController;
     private Camera _playerCamera;
     
     [Header("이동 설정")]
-    [SerializeField] private float _moveSpeed = 5f;
     [SerializeField] private float _rotationSpeed = 10f;
-    [SerializeField] private LayerMask _groundLayer; // 지형 레이어
-    [SerializeField] private GameObject _moveIndicatorPrefab; // 이동 표시자 프리팹
+    [SerializeField] private LayerMask _groundLayer;
+    [SerializeField] private GameObject _moveIndicatorPrefab;
     
     [Header("스킬 설정")]
     [SerializeField] private Skill[] _skills = new Skill[4]; // Q, W, E, R 스킬
-    [SerializeField] private Transform _skillOrigin; // 스킬 발사 위치
+    [SerializeField] private Transform _skillOrigin;
+    
+    [Header("체력바 설정")]
+    [SerializeField] private RectTransform _healthBarBackground;
+    [SerializeField] private Image _healthBarFill;
     
     // 컴포넌트 참조
     private Animator _animator;
     private NavMeshAgent _navAgent;
     private GameObject _moveIndicator;
+    private Object_Base _objectBase;
+    private CharacterStats _characterStats;
     
     // 네트워크 변수
     private NetworkVariable<bool> _isMoving = new NetworkVariable<bool>(false);
@@ -40,6 +47,19 @@ public class PlayerController : NetworkBehaviour
     private Dictionary<int, float> _skillMaxCooldowns = new Dictionary<int, float>();
     private Dictionary<int, float> _skillDamages = new Dictionary<int, float>();
     
+    //캐릭터 움직임 동기화 부분
+    // 마지막 위치 및 회전 업데이트 시간 추적
+    private float _lastPositionUpdateTime;
+    private Vector3 _lastSentPosition;
+    private Quaternion _lastSentRotation;
+    
+    // 위치 업데이트 간격 (초) - 값이 작을수록 더 자주 업데이트, 더 부드러움
+    [SerializeField] private float _positionUpdateInterval = 0.05f; // 초당 20회 업데이트
+    
+    // 위치 변경 임계값 - 이 값 이상 변경되었을 때만 업데이트
+    [SerializeField] private float _positionThreshold = 0.01f;
+    [SerializeField] private float _rotationThreshold = 1.0f;
+    
     [System.Serializable]
     public class Skill
     {
@@ -49,125 +69,105 @@ public class PlayerController : NetworkBehaviour
         public float damage;
         public float range;
         public float aoeRadius;
-        public bool isTargeted; // 타겟팅 스킬인지 여부
+        public bool isTargeted;
         public string animationTrigger;
     }
-    
-    private void Start()
-    {
-        Debug.Log("PlayerController Start 호출됨");
-    }
-    
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
         
-        Debug.Log("PlayerController OnNetworkSpawn 호출됨");
-        
         // 컴포넌트 참조 가져오기
         _animator = GetComponentInChildren<Animator>();
         _navAgent = GetComponent<NavMeshAgent>();
+        _objectBase = GetComponent<Object_Base>();
+        _characterStats = GetComponent<CharacterStats>();
         
         // NavMeshAgent 설정
-        if (_navAgent != null)
+        if (_navAgent != null && _characterStats != null)
         {
-            _navAgent.speed = _moveSpeed;
+            _navAgent.speed = _objectBase.GetMoveSpeed();
             _navAgent.angularSpeed = _rotationSpeed * 100;
             _navAgent.acceleration = 8f;
         }
         
-        // 자신의 플레이어일 경우에만 카메라 생성
+        // 다른 플레이어의 경우 NavMeshAgent 비활성화
+        if (!IsOwner)
+        {
+            if (_navAgent != null)
+            {
+                _navAgent.enabled = false;
+                Debug.Log($"다른 플레이어의 NavMeshAgent 비활성화: {OwnerClientId}");
+            }
+        }
+        else 
+        {
+            // 자신의 플레이어인 경우 초기화
+            _lastSentPosition = transform.position;
+            _lastSentRotation = transform.rotation;
+            _lastPositionUpdateTime = Time.time;
+            
+            // NavMeshAgent 설정
+            if (_navAgent != null && _characterStats != null)
+            {
+                _navAgent.speed = _objectBase.GetMoveSpeed();
+                _navAgent.angularSpeed = _rotationSpeed * 100;
+                _navAgent.acceleration = 8f;
+            }
+        }
+        
+        // 체력바 초기화
+        InitializeHealthBar();
+        
+        // 자신의 플레이어일 경우 초기화
         if (IsOwner)
         {
+            // 플레이어 ID 설정
+            string playerId = "Player" + NetworkManager.Singleton.LocalClientId.ToString();
+            
+            // Object_Base에 플레이어 ID 설정
+            if (_objectBase != null)
+            {
+                _objectBase.SetPlayerIdServerRpc(playerId);
+            }
+            
+            // 카메라 설정
             SetupCamera();
             CreateMoveIndicator();
             
-            // 카메라 설정이 완료될 시간을 주기 위해 지연 후 카메라 참조 찾기
-            //StartCoroutine(FindCameraWithDelay(0.5f));
+            // 스킬 정보 초기화
+            InitializeSkills();
+            
+            // 캐릭터 데이터 로드
+            LoadCharacterData();
         }
         
         // 네트워크 변수 콜백
         _isMoving.OnValueChanged += OnMovingChanged;
         _currentSkillIndex.OnValueChanged += OnSkillIndexChanged;
     }
-    
-    private IEnumerator FindCameraWithDelay(float delay)
-    {
-        yield return new WaitForSeconds(delay);
-    
-        Debug.Log("지연 후 카메라 참조 찾기 시도");
-    
-        // 카메라 컨트롤러에서 카메라 참조 가져오기
-        if (_cameraController != null)
-        {
-            _playerCamera = _cameraController.GetCamera();
-            Debug.Log($"카메라 컨트롤러에서 카메라 참조 얻음: {(_playerCamera != null ? _playerCamera.name : "실패")}");
-        }
-    
-        // 그래도 카메라가 없으면 다른 방법으로 찾기
-        if (_playerCamera == null)
-        {
-            // 브레인이 있는 카메라 찾기
-            CinemachineBrain[] brains = FindObjectsOfType<CinemachineBrain>();
-            Debug.Log($"씬에서 찾은 CinemachineBrain 수: {brains.Length}");
-        
-            foreach (var brain in brains)
-            {
-                if (brain.isActiveAndEnabled && brain.OutputCamera != null)
-                {
-                    _playerCamera = brain.OutputCamera;
-                    Debug.Log($"활성화된 Brain의 카메라 찾음: {_playerCamera.name}");
-                    break;
-                }
-            }
-        }
-    
-        // 여전히 카메라가 없으면 마지막 시도
-        if (_playerCamera == null)
-        {
-            _playerCamera = Camera.main;
-            Debug.Log($"메인 카메라 사용: {(_playerCamera != null ? _playerCamera.name : "메인 카메라 없음")}");
-        }
-    
-        // 최종 결과 확인
-        if (_playerCamera != null)
-        {
-            Debug.Log("카메라 참조 성공!");
-        }
-        else
-        {
-            Debug.LogError("카메라 참조를 찾을 수 없습니다. 마우스 우클릭 이동이 작동하지 않을 수 있습니다.");
-        }
-    }
-    
-    /// <summary>
-    /// 선택된 캐릭터 데이터 로드
-    /// </summary>
+
     private void LoadCharacterData()
     {
-        // CharacterManager에서 데이터 가져오기
+        // CharacterManager가 없는 경우 기본값 사용
         CharacterManager characterManager = CharacterManager.Instance;
+        if (characterManager == null) return;
     
-        if (characterManager != null)
+        // 선택된 캐릭터 인덱스
+        _characterIndex = characterManager.GetSelectedCharacterIndex();
+    
+        // 캐릭터 스탯 데이터
+        CharacterStatsData statsData = characterManager.GetCharacterStats(_characterIndex);
+    
+        // 스탯 설정 - Object_Base를 통해 설정
+        if (_objectBase != null && statsData != null && IsServer)
         {
-            // 선택된 캐릭터 인덱스
-            _characterIndex = characterManager.GetSelectedCharacterIndex();
-        
-            // 캐릭터 스탯 데이터
-            CharacterStatsData statsData = characterManager.GetCharacterStats(_characterIndex);
-        
-            // 스탯 설정
-            CharacterStats stats = GetComponent<CharacterStats>();
-            if (stats != null && statsData != null && IsServer)
-            {
-                stats.SetStatsData(statsData);
-            }
+            _objectBase.SetCharacterStats(statsData);
         }
+    
+        // 스킬 정보 업데이트
+        UpdateSkillsFromCharacterData();
     }
     
-    /// <summary>
-    /// CharacterManager의 데이터로 스킬 정보 업데이트
-    /// </summary>
     private void UpdateSkillsFromCharacterData()
     {
         CharacterManager characterManager = CharacterManager.Instance;
@@ -196,128 +196,102 @@ public class PlayerController : NetworkBehaviour
                 _skillDamages[i] = _skills[i].damage;
             }
         }
-    }
-    
-    /// <summary>
-    /// 스킬 UI 초기화 (클라이언트 쪽에서만 호출)
-    /// </summary>
-    private void InitializeSkillUI()
-    {
-        // SkillUIManager 찾기
-        SkillUIManager skillUIManager = FindObjectOfType<SkillUIManager>();
         
-        if (skillUIManager != null)
+        // 로컬 플레이어일 경우 UI에 초기 스킬 정보 전달
+        if (IsOwner)
         {
-            // 스킬 정보 전달
             for (int i = 0; i < _skills.Length; i++)
             {
                 if (_skills[i] != null)
                 {
-                    skillUIManager.UpdateSkillCooldown(i, 0, _skillMaxCooldowns[i]);
+                    GamePlayManager.Instance.StartSkillCooldownFromServer(i, 0);
                 }
+            }
+        }
+    }
+
+    private void InitializeSkills()
+    {
+        // 기본 스킬 쿨다운 정보 설정
+        for (int i = 0; i < _skills.Length; i++)
+        {
+            if (_skills[i] != null)
+            {
+                _skillMaxCooldowns[i] = _skills[i].cooldown;
+                _skillDamages[i] = _skills[i].damage;
+            }
+        }
+    }
+
+    private void InitializeHealthBar()
+    {
+        // Object_Base를 통해 체력 정보 접근 (구성 패턴 사용)
+        if (_objectBase != null && _healthBarFill != null)
+        {
+            // 초기 체력바 상태 설정
+            UpdateHealthBar(_objectBase.GetCurrentHP(), _objectBase.GetMaxHP());
+        
+            // 데미지 이벤트 구독
+            _objectBase.OnDamageTaken += UpdateHealthBar;
+        }
+    }
+    
+    private void UpdateHealthBar(float currentHealth, float maxHealth)
+    {
+        if (_healthBarFill != null)
+        {
+            // 체력 비율 계산
+            float fillAmount = Mathf.Clamp01(currentHealth / maxHealth);
+            _healthBarFill.fillAmount = fillAmount;
+            
+            // 로컬 플레이어일 경우 GamePlayManager에 HP 상태 업데이트
+            if (IsOwner)
+            {
+                GamePlayManager.Instance.UpdatePlayerHPFromServer(fillAmount);
             }
         }
     }
     
     private void SetupCamera()
     {
-        Debug.Log("SetupCamera 호출됨");
-    
         try {
             // 카메라 프리팹 생성
             GameObject cameraObj = Instantiate(_cameraPrefab);
-            cameraObj.name = "QuadViewCamera";  // 명확한 이름 지정
-            Debug.Log($"카메라 오브젝트 생성됨: {cameraObj.name}");
-        
-            // 씬에 있는 모든 카메라 컴포넌트 로깅
-            Camera[] allCamerasBeforeSetup = FindObjectsOfType<Camera>();
-            Debug.Log($"카메라 설정 전 씬의 카메라 수: {allCamerasBeforeSetup.Length}");
-            foreach (var cam in allCamerasBeforeSetup)
-            {
-                Debug.Log($"카메라: {cam.name}, 태그: {cam.tag}");
-            }
-        
+            cameraObj.name = "QuadViewCamera";
+            
             // 쿼드뷰 시네머신 컨트롤러 가져오기
             _cameraController = cameraObj.GetComponent<QuadViewCinemachine>();
-        
+            
             // 카메라 타겟 설정
             if (_cameraController != null)
             {
-                Debug.Log("카메라 컨트롤러 찾음");
                 _cameraController.SetTarget(transform);
-            
-                // 카메라 설정이 완료되고 참조 가져오기
                 StartCoroutine(GetQuadViewCameraWithDelay(0.2f));
             }
-            else
-            {
-                Debug.LogError("카메라 프리팹에서 QuadViewCinemachine 컴포넌트를 찾을 수 없습니다.");
-            }
-        
+            
             // 씬 전환 시에도 카메라 유지
             DontDestroyOnLoad(cameraObj);
         }
         catch (System.Exception e) {
-            Debug.LogError($"카메라 설정 중 오류 발생: {e.Message}\n{e.StackTrace}");
+            Debug.LogError($"카메라 설정 중 오류 발생: {e.Message}");
         }
     }
     
     private IEnumerator GetQuadViewCameraWithDelay(float delay)
     {
         yield return new WaitForSeconds(delay);
-    
-        Debug.Log("지연 후 카메라 참조 가져오기 시도");
-    
-        // 씬에 있는 모든 카메라 컴포넌트 로깅
-        Camera[] allCamerasAfterSetup = FindObjectsOfType<Camera>();
-        Debug.Log($"카메라 설정 후 씬의 카메라 수: {allCamerasAfterSetup.Length}");
-        foreach (var cam in allCamerasAfterSetup)
-        {
-            Debug.Log($"카메라: {cam.name}, 태그: {cam.tag}");
-        }
-    
+        
         // 카메라 컨트롤러에서 카메라 참조 가져오기
         if (_cameraController != null)
         {
             _playerCamera = _cameraController.GetCamera();
-            Debug.Log($"카메라 컨트롤러에서 카메라 참조 얻음: {(_playerCamera != null ? _playerCamera.name : "실패")}");
         }
-    
-        // 최근 생성된 카메라(QuadViewCamera) 찾기
-        if (_playerCamera == null || _playerCamera.name == "Main Camera")
+        
+        // 카메라를 찾지 못한 경우 대체 방법
+        if (_playerCamera == null)
         {
-            Debug.Log("QuadViewCamera를 직접 찾는 중...");
-            Camera[] cameras = FindObjectsOfType<Camera>();
-        
-            // QuadViewCamera 이름을 가진 카메라 찾기
-            foreach (var cam in cameras)
-            {
-                if (cam.name.Contains("QuadView") || cam.name.Contains("Quad") || 
-                    cam.gameObject.name.Contains("Clone"))
-                {
-                    _playerCamera = cam;
-                    Debug.Log($"QuadViewCamera 찾음: {cam.name}");
-                    break;
-                }
-            }
-        
-            // 그래도 못 찾으면 메인 카메라가 아닌 아무 카메라
-            if (_playerCamera == null || _playerCamera.name == "Main Camera")
-            {
-                foreach (var cam in cameras)
-                {
-                    if (cam.name != "Main Camera" && cam.tag != "MainCamera")
-                    {
-                        _playerCamera = cam;
-                        Debug.Log($"메인 카메라가 아닌 카메라 선택: {cam.name}");
-                        break;
-                    }
-                }
-            }
+            _playerCamera = Camera.main;
         }
-    
-        // 최종 결과 로깅
-        Debug.Log($"카메라 참조 결과: {(_playerCamera != null ? _playerCamera.name : "실패")}");
     }
     
     private void CreateMoveIndicator()
@@ -331,7 +305,6 @@ public class PlayerController : NetworkBehaviour
     
     private void Update()
     {
-        // 자신의 플레이어만 입력 처리
         if (!IsOwner) return;
         
         // 이동 입력 처리
@@ -345,43 +318,32 @@ public class PlayerController : NetworkBehaviour
         
         // 이동 상태 업데이트
         UpdateMovementState();
+        
+        // 위치 동기화 로직 추가
+        UpdatePositionSynchronization();
     }
-
+    
+    
     private void HandleMovementInput()
     {
         // 마우스 우클릭 감지
         if (Input.GetMouseButtonDown(1))
         {
-            Debug.Log("우클릭 감지됨");
-
-            // 카메라가 없는 경우 다시 찾기 시도
             if (_playerCamera == null)
             {
-                Debug.LogWarning("카메라 참조가 없어 다시 찾는 중...");
-
-                // 씬의 모든 카메라 확인
-                Camera[] allCameras = FindObjectsOfType<Camera>();
-                if (allCameras.Length > 0)
-                {
-                    _playerCamera = allCameras[0];
-                    Debug.Log($"씬에서 카메라 찾음: {_playerCamera.name}");
-                }
-                else
+                _playerCamera = Camera.main;
+                if (_playerCamera == null)
                 {
                     Debug.LogError("카메라를 찾을 수 없습니다. 이동 불가.");
                     return;
                 }
             }
 
-            // 여기서부터는 기존 코드와 동일
             Ray ray = _playerCamera.ScreenPointToRay(Input.mousePosition);
-            Debug.Log($"레이캐스트 시작: 마우스 위치={Input.mousePosition}");
-
             RaycastHit hit;
+            
             if (Physics.Raycast(ray, out hit, 100f, _groundLayer))
             {
-                Debug.Log($"레이캐스트 히트: 위치={hit.point}, 오브젝트={hit.collider.gameObject.name}");
-
                 // 이동 표시자 표시
                 if (_moveIndicator != null)
                 {
@@ -394,25 +356,6 @@ public class PlayerController : NetworkBehaviour
                 if (_navAgent != null)
                 {
                     _navAgent.SetDestination(hit.point);
-                    Debug.Log($"네비게이션 목적지 설정: {hit.point}");
-
-                    // 서버에 이동 요청
-                    SetMoveTargetServerRpc(hit.point);
-                }
-                else
-                {
-                    Debug.LogError("NavMeshAgent가 없습니다.");
-                }
-            }
-            else
-            {
-                Debug.LogWarning($"레이캐스트 실패: 지형을 찾을 수 없습니다. 레이어 마스크: {_groundLayer.value}");
-
-                // 모든 레이어에 대해 레이캐스트 시도 (디버깅용)
-                if (Physics.Raycast(ray, out hit, 100f))
-                {
-                    Debug.Log(
-                        $"모든 레이어 레이캐스트 히트: 레이어={LayerMask.LayerToName(hit.collider.gameObject.layer)}, 이름={hit.collider.gameObject.name}");
                 }
             }
         }
@@ -458,8 +401,6 @@ public class PlayerController : NetworkBehaviour
         // 스킬이 타겟팅이 필요한 경우
         if (skill.isTargeted)
         {
-            // 마우스 위치에 타겟팅 표시자 표시 (여기서는 구현하지 않음)
-            // 예: StartCoroutine(ShowTargetingIndicator(index));
             Debug.Log($"타겟팅 스킬 준비: {skill.name}");
         }
         else
@@ -471,8 +412,14 @@ public class PlayerController : NetworkBehaviour
     
     private void UseSkillAtPosition(int index, Vector3 targetPosition)
     {
+        if (index < 0 || index >= _skills.Length || _skills[index] == null)
+            return;
+            
         // 스킬 쿨다운 시작
         _skillCooldowns[index] = _skills[index].cooldown;
+        
+        // UI 업데이트 - GamePlayManager를 통해 스킬 쿨다운 시작
+        GamePlayManager.Instance.StartSkillCooldownFromServer(index, (int)_skills[index].cooldown);
         
         // 서버에 스킬 사용 요청
         UseSkillServerRpc(index, targetPosition);
@@ -503,14 +450,84 @@ public class PlayerController : NetworkBehaviour
         }
     }
     
-    [ServerRpc]
-    private void SetMoveTargetServerRpc(Vector3 position)
+    // 위치 동기화 처리
+    private void UpdatePositionSynchronization()
     {
-        // 서버에서 NavMeshAgent 설정
-        if (_navAgent != null)
+        // 현재 시간이 마지막 업데이트 시간 + 업데이트 간격보다 크면 업데이트
+        if (Time.time - _lastPositionUpdateTime >= _positionUpdateInterval)
         {
-            _navAgent.SetDestination(position);
+            // 현재 위치와 회전
+            Vector3 currentPosition = transform.position;
+            Quaternion currentRotation = transform.rotation;
+            
+            // 위치나 회전이 임계값 이상 변경되었는지 확인
+            bool positionChanged = Vector3.Distance(_lastSentPosition, currentPosition) >= _positionThreshold;
+            bool rotationChanged = Quaternion.Angle(_lastSentRotation, currentRotation) >= _rotationThreshold;
+            
+            // 변경되었으면 업데이트 
+            if (positionChanged || rotationChanged)
+            {
+                // 서버에 업데이트 요청
+                SyncTransformServerRpc(currentPosition, currentRotation, _navAgent.velocity);
+                
+                // 마지막 전송 값 업데이트
+                _lastSentPosition = currentPosition;
+                _lastSentRotation = currentRotation;
+                _lastPositionUpdateTime = Time.time;
+            }
         }
+    }
+    
+    [ServerRpc]
+    private void SyncTransformServerRpc(Vector3 position, Quaternion rotation, Vector3 velocity)
+    {
+        // 추가 유효성 검사 (필요 시)
+        // 예: 속도 제한, 위치 제한 등
+        
+        // 1. 서버에서 트랜스폼 업데이트
+        transform.position = position;
+        transform.rotation = rotation;
+        
+        // 2. 변경 사항을 다른 모든 클라이언트에게 전달
+        SyncTransformClientRpc(position, rotation, velocity);
+    }
+    
+    [ClientRpc]
+    private void SyncTransformClientRpc(Vector3 position, Quaternion rotation, Vector3 velocity)
+    {
+        // 소유자는 이미 자신의 위치를 업데이트했으므로 무시
+        if (IsOwner) return;
+        
+        // 다른 클라이언트에서 트랜스폼 업데이트
+        transform.position = position;
+        transform.rotation = rotation;
+        
+        //부드러운 움직임을 위한 보간 로직 추가
+        StartCoroutine(SmoothMovement(position, rotation, velocity));
+    }
+    
+    //부드러운 움직임을 위한 코루틴
+    private IEnumerator SmoothMovement(Vector3 targetPosition, Quaternion targetRotation, Vector3 velocity)
+    {
+        Vector3 startPosition = transform.position;
+        Quaternion startRotation = transform.rotation;
+        float journeyLength = Vector3.Distance(startPosition, targetPosition);
+        float startTime = Time.time;
+        
+        // 거리에 따라 이동 시간 계산 (속도를 사용하여 예측)
+        float moveTime = Mathf.Max(0.1f, journeyLength / velocity.magnitude);
+        
+        while (Time.time - startTime < moveTime)
+        {
+            float journeyFraction = (Time.time - startTime) / moveTime;
+            transform.position = Vector3.Lerp(startPosition, targetPosition, journeyFraction);
+            transform.rotation = Quaternion.Slerp(startRotation, targetRotation, journeyFraction);
+            yield return null;
+        }
+        
+        // 최종 위치로 설정
+        transform.position = targetPosition;
+        transform.rotation = targetRotation;
     }
     
     [ServerRpc]
@@ -522,13 +539,12 @@ public class PlayerController : NetworkBehaviour
     [ServerRpc]
     private void UseSkillServerRpc(int skillIndex, Vector3 targetPosition)
     {
-        if (skillIndex < 0 || skillIndex >= _skills.Length)
+        if (skillIndex < 0 || skillIndex >= _skills.Length || _skills[skillIndex] == null)
             return;
             
         // 스킬 사용 상태 설정
         _currentSkillIndex.Value = skillIndex;
         
-        // 스킬 이펙트 및 데미지 적용
         Skill skill = _skills[skillIndex];
         
         // 타겟 방향으로 회전
@@ -559,34 +575,28 @@ public class PlayerController : NetworkBehaviour
             }
             else
             {
-                // 직선형 스킬인 경우, 발사체 방향 설정 등 추가 로직 필요
-                // 여기서는 간단하게 구현
-                
-                // 레이캐스트로 타겟 탐색
+                // 직선형 스킬
                 RaycastHit hit;
                 if (Physics.Raycast(spawnPosition, direction.normalized, out hit, skill.range))
                 {
                     // 타겟에 데미지 적용
-                    DummyTarget target = hit.collider.GetComponent<DummyTarget>();
-                    if (target != null)
+                    Object_Base targetObj = hit.collider.GetComponent<Object_Base>();
+                    if (targetObj != null)
                     {
-                        target.TakeDamageServerRpc(skill.damage);
+                        targetObj.UpdateHP(skill.damage);
                     }
                 }
             }
             
-            // 일정 시간 후 이펙트 제거
+            // 네트워크에 이펙트 스폰
             NetworkObject networkObj = effectObj.GetComponent<NetworkObject>();
             if (networkObj != null)
             {
-                networkObj.Spawn(); // 네트워크에 스폰
-                
-                // 5초 후 제거
+                networkObj.Spawn();
                 StartCoroutine(DestroyEffectAfterDelay(networkObj, 5f));
             }
             else
             {
-                // 네트워크 오브젝트가 아닌 경우 일반 Destroy 사용
                 Destroy(effectObj, 5f);
             }
         }
@@ -598,7 +608,7 @@ public class PlayerController : NetworkBehaviour
     private IEnumerator DestroyEffectAfterDelay(NetworkObject obj, float delay)
     {
         yield return new WaitForSeconds(delay);
-        if (obj != null)
+        if (obj != null && obj.IsSpawned)
         {
             obj.Despawn();
         }
@@ -611,14 +621,16 @@ public class PlayerController : NetworkBehaviour
         
         foreach (var hitCollider in hitColliders)
         {
-            // 더미 타겟 또는 적 플레이어 확인
-            DummyTarget target = hitCollider.GetComponent<DummyTarget>();
-            if (target != null)
+            // 타겟 검색
+            Object_Base targetObj = hitCollider.GetComponent<Object_Base>();
+            if (targetObj != null)
             {
-                target.TakeDamageServerRpc(damage);
+                // 자신이 아닌 경우 데미지 적용
+                if (targetObj != _objectBase)
+                {
+                    targetObj.UpdateHP(damage);
+                }
             }
-            
-            // 추후 플레이어 데미지 로직 추가 가능
         }
     }
     
@@ -641,33 +653,12 @@ public class PlayerController : NetworkBehaviour
     // 스킬 인덱스 변경 콜백
     private void OnSkillIndexChanged(int oldValue, int newValue)
     {
-        if (newValue >= 0 && newValue < _skills.Length)
+        if (newValue >= 0 && newValue < _skills.Length && _skills[newValue] != null)
         {
             // 스킬 애니메이션 재생
             if (_animator != null && !string.IsNullOrEmpty(_skills[newValue].animationTrigger))
             {
                 _animator.SetTrigger(_skills[newValue].animationTrigger);
-            }
-        }
-    }
-    
-    // 디버깅용 - 스킬 범위 시각화
-    private void OnDrawGizmosSelected()
-    {
-        for (int i = 0; i < _skills.Length; i++)
-        {
-            if (_skills[i] != null)
-            {
-                if (_skills[i].aoeRadius > 0)
-                {
-                    Gizmos.color = Color.red;
-                    Gizmos.DrawWireSphere(transform.position + transform.forward * _skills[i].range, _skills[i].aoeRadius);
-                }
-                else
-                {
-                    Gizmos.color = Color.blue;
-                    Gizmos.DrawRay(transform.position, transform.forward * _skills[i].range);
-                }
             }
         }
     }

@@ -415,6 +415,16 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 2052670411}
     m_Modifications:
+    - target: {fileID: 2054019797670713428, guid: 47925d6af79c7384a8ed453926519ea2,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4133521527747125885, guid: 47925d6af79c7384a8ed453926519ea2,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4637261110429064448, guid: 47925d6af79c7384a8ed453926519ea2,
         type: 3}
       propertyPath: m_Pivot.x
@@ -670,6 +680,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _uiGameResult: {fileID: 425262907}
+  _winnerKey: WinnerPlayerId
+  _player1IdKey: Player1Id
+  _player2IdKey: Player2Id
+  _player1TimeKey: Player1Time
+  _player2TimeKey: Player2Time
+  _player1BossHPKey: Player1BossHP
+  _player2BossHPKey: Player2BossHP
+  _player1DeathsKey: Player1Deaths
+  _player2DeathsKey: Player2Deaths
 --- !u!4 &1756894031
 Transform:
   m_ObjectHideFlags: 0
